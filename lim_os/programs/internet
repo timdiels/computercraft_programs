@@ -1,0 +1,15 @@
+Server:
+
+every now and then:
+rednet.broadcast({user=nil, protocol="messaging", type="server_broadcast"})
+
+if receiving the kind of client message layed out below:
+rednet.send around ring ({user=nil, protocol="messaging", type="request_message"})
+and then some other to go reverse direction back to source server
+rednet.send(client_id, {array of messages})
+
+upon receiving any other message:
+store message
+
+Client:
+rednet.send(server_id, {user=nil, protocol="messaging", type="get_messages"})

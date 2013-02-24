@@ -1,0 +1,84 @@
+-- unless mentioned otherwise, time values
+-- are in real life time
+
+-- works for seconds, min, hours
+-- mct = minecraft time
+-- rt = real (life) time
+mct2rt = 50 / 60 / 60
+rt2mct = 1 / mct2rt
+
+function time()
+  return os.time() * mct2rt
+end
+
+function dropDownAll()
+  for i=1,16 do
+    turtle.dropDown()
+  end
+end
+
+function redPulse(side, count)
+  count = count or 1
+  
+  for i=1,count do
+    redstone.setOutput(side, true)
+    os.sleep(0.1)
+    redstone.setOutput(side, false)
+    os.sleep(0.1)
+  end
+end
+
+function getMinUntilInterval(interval, offset)
+  offset = offset or 0
+  
+  local time_in_minutes = (os.day() * 24 + os.time()) * 60 * mct2rt
+  local minutes_left = interval - (time_in_minutes % interval) + offset
+  
+  return minutes_left
+end
+
+-- time: time in seconds
+function timeStr(time)
+  local time, sec = math.modf(time / 60)
+  sec = math.floor(sec * 60 + 0.5)
+  
+  local time, min = math.modf(time / 60)
+  min = math.floor(min * 60 + 0.5)
+  
+  local time, hours = math.modf(time / 24)
+  hours = math.floor(hours * 24 + 0.5)
+  
+  local days = math.floor(time + 0.5)
+  
+  local str = ''
+  if days > 1 then
+    str = str..'in '..days..' days '
+  elseif days == 1 then
+    str = str..'tomorrow '
+  end
+  str = str..'at '..hours..':'..min
+  
+  return str
+end
+
+function durationStr(sec)
+  return math.floor(sec/60 + 0.5) .. " min"
+end
+
+-- wait until end of interval,
+-- first interval starts at
+-- given offset.
+function sleepInterval(interval, offset)
+  local sec = getMinUntilInterval(interval, offset) * 60
+  printEvent('Resume', sec)
+  os.sleep(sec)
+end
+
+-- event: event name
+-- sec: offset to current time in sec
+function printEvent(event, sec)
+  sec = sec or 0
+  local end_time = os.time()*60*60 + sec * rt2mct
+  print(event..' '..timeStr(end_time)..'mct ('..durationStr(sec)..')')
+end
+

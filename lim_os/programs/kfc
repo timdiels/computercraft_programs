@@ -1,0 +1,38 @@
+-- Kill fucking chickens
+
+function isRawChicken()
+  return turtle.compareTo(16)
+end
+
+while true do
+  common.sleepInterval(25)
+  
+  print('Commencing slaughter')
+  while turtle.attackUp() do
+    turtle.suckUp()
+    os.sleep(0.5)
+  end
+  
+  common.printEvent('Finished slaughter')
+  turtle.dropDown()
+  
+  print('Baking')
+  for i=1,15 do
+    turtle.select(i)
+	if isRawChicken() then
+	  while not turtle.dropDown() do
+	    turtle.suckDown()
+		os.sleep(5)
+	  end
+	end
+  end
+  
+  print("Dump in chest")
+  turtle.turnLeft()
+  for i=1,15 do
+	turtle.select(i)
+	turtle.drop()
+  end
+  turtle.turnRight()
+end
+

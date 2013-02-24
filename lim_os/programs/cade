@@ -1,0 +1,28 @@
+-- Collect and dispense eggs
+
+-- Assumed orientation: towards eggs
+
+function timeUntilDispense()
+  local sec = common.getMinUntilInterval(25, 2) * 60
+  common.printEvent('Dispense eggs', sec)
+  return sec
+end
+
+local dispense_time = timeUntilDispense()
+
+while true do
+  -- Collect
+  turtle.suck()
+  
+  -- Drop in dispenser
+  common.dropDownAll()
+
+  if dispense_time < 0 then
+    -- Dispense some amount (hopefully empties it)
+    common.redPulse("bottom", 140)
+    dispense_time = timeUntilDispense()
+  end
+
+  os.sleep(30)
+  dispense_time = dispense_time - 30
+end

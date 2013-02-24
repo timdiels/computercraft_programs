@@ -1,0 +1,13 @@
+print("Installing lim_os rootkit")
+
+fs.delete("/lim_os")
+fs.copy("/disk/lim_os", "/lim_os")
+if not fs.exists("/startup") then
+  fs.copy("/disk/startup.file", "startup")
+end
+
+if not os.getComputerLabel() then
+	os.setComputerLabel("lim_"..os.getComputerID())
+end
+
+shell.run("startup")
