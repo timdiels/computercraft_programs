@@ -58,13 +58,16 @@ function assert(condition, message, level)
 	end
 end
 
-function require_(condition, message)
-	assert(condition, 'Require failed', 2)
+function require_(condition, level)
+	level = level or 1
+	assert(condition, 'Require failed', level+1)
 end
 
-function ensure(condition, message)
-	assert(condition, 'Ensure failed', 2)
+function ensure(condition, level)
+	level = level or 1
+	assert(condition, 'Ensure failed', level+1)
 end
+
 
 ----------------------
 -- Debugging utils
@@ -74,12 +77,13 @@ debug = debug or {}
 function debug.print(a)
 	if type(a) == "table" then
 		for k,v in pairs(a) do
-			print(k..'='..v)
+			print(tostring(k)..'='..tostring(v))
 		end
 	else
-		print(a)
+		print(tostring(a))
 	end
 end
+
 
 -----------------
 -- OO Base
@@ -92,6 +96,7 @@ function Object:new()
 	self.__index = self
 	return obj
 end
+
 
 ------------
 -- More io
@@ -130,6 +135,7 @@ function io.to_file(path, table_)
 	f.write(str)
 	f.close()
 end
+
 
 --------------
 -- More table
@@ -221,6 +227,7 @@ if turtle then
 	end
 end
 
+
 -----------
 -- Other
 -----------
@@ -234,3 +241,11 @@ end
 function Exception(message)
 	error({type="Exception", message=message}, 2)
 end
+
+
+---------------------------------------------------------------
+-- Include everything here (to avoid including things twice)
+---------------------------------------------------------------
+
+include("Orientation.lua")
+include("turtle/Driver.lua")

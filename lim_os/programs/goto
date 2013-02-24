@@ -4,10 +4,8 @@ args = { ... }
 
 catch(function()
 
-include("turtle/Driver.lua")
-
 local driver = Driver:new()
 local dest = vector.new(tonumber(args[1]), tonumber(args[2]), tonumber(args[3]))
-driver:go_to(dest, {'y', 'z', 'x'}, {x=false, y=false, z=false})
+driver:go_to(dest, {'y', 'z', 'x'}, {x=true, y=true, z=true})
 
 end)

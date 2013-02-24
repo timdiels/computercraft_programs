@@ -3,29 +3,19 @@
 -- Assumes it can move backwards 1 tile when started
 -- Assumes that destination can be reached by first moving along x, then z, then y
 -- Note: Driver is fuel agnostic (TODO might want to be able to ask Driver fuel distance from pos to some destination, based on the usual assumptions... Does failed movement cost fuel??)
+-- TODO when an orient is interrupted, it will not be continued next run
 
 -- TODO Does dig fail when inventory is full? We assume as much in our miner!!
 
 -- Refactors:
 -- TODO add an Axis/Orientation class or something
 
+-- TODO moving through gravel
 catch(function()
 
 Driver = Object:new()
 
 Driver._STATE_FILE = "/driver.state"
-
-Driver.X = 1
-Driver.Y = 2
-Driver.Z = 3
-Driver.EAST = Driver.X
-Driver.SOUTH = Driver.Z
-Driver.WEST = -Driver.EAST
-Driver.NORTH = -Driver.SOUTH
-Driver.UP = Driver.Y
-Driver.DOWN = -Driver.UP
-
-Driver._axis_to_orientation = {x=Driver.X, y=Driver.Y, z=Driver.Z}
 
 function Driver:new()
 	local obj = Object.new(self)
@@ -56,11 +46,14 @@ function Driver:_save()
 end
 
 function Driver:orient(orientation)
-	require_(math.abs(orientation) ~= Driver.UP)
-	
+	require_(orientation ~= nil, 1)
 	self:_load_orientation()
-	while self._orientation ~= orientation do
-		self:turn_right()
+	if orientation == self._orientation:left() then
+		self:turn_left()
+	else
+		while self._orientation ~= orientation do
+			self:turn_right()
+		end
 	end
 end
 
@@ -68,7 +61,6 @@ function Driver:up()
 	if turtle.detectUp() then
 		turtle.digUp()
 	end
-	
 	turtle.up()
 end
 
@@ -76,7 +68,6 @@ function Driver:down()
 	if turtle.detectDown() then
 		turtle.digDown()
 	end
-	
 	turtle.down()
 end
 
@@ -100,40 +91,53 @@ end
 
 function Driver:turn_left()
 	turtle.turnLeft()
-	if self._orientation == Driver.EAST then
-		self._orientation = Driver.NORTH
-	elseif self._orientation == Driver.SOUTH then
-		self._orientation = Driver.EAST
-	elseif self._orientation == Driver.WEST then
-		self._orientation = Driver.SOUTH
-	elseif self._orientation then
-		assert(self._orientation == Driver.NORTH)
-		self._orientation = Driver.WEST
+	if self._orientation then
+		self._orientation = self._orientation:left()
 	end
 end
 
 function Driver:turn_right()
 	turtle.turnRight()
-	if self._orientation == Driver.NORTH then
-		self._orientation = Driver.EAST
-	elseif self._orientation == Driver.EAST then
-		self._orientation = Driver.SOUTH
-	elseif self._orientation == Driver.SOUTH then
-		self._orientation = Driver.WEST
-	elseif self._orientation then
-		assert(self._orientation == Driver.WEST)
-		self._orientation = Driver.NORTH
+	if self._orientation then
+		self._orientation = self._orientation:right()
+	end
+end
+
+function Driver:dig()
+	local may_dig
+	if self._orientation then
+		local axis = self._orientation:get_axis()
+		may_dig = self._may_dig[axis]
+	else
+		may_dig = self._may_dig["x"] and self._may_dig["z"]
+	end
+	
+	if may_dig then
+		turtle.dig()
+	else
+		Exception("Not allowed to dig along axis: "..axis)
+	end
+end
+	
+function Driver:dig_up()
+	if self._may_dig[axis] then
+		turtle.digUp()
+	else
+		Exception("Not allowed to dig along axis: y")
+	end
+end
+
+function Driver:dig_down()
+	if self._may_dig[axis] then
+		turtle.digDown()
+	else
+		Exception("Not allowed to dig along axis: y")
 	end
 end
 
 function Driver:_move_to_destination()
-	local i=10
 	while not self:_has_reached_destination() do
 		self:_move_one_tile()
-		i=i-1
-		if i<0 then
-			break
-		end
 	end
 	
 	-- destination reached
@@ -147,54 +151,55 @@ function Driver:_move_one_tile()
 	local pos = self:_get_pos()
 	for _, axis in pairs(self._movement_order) do
 		if pos[axis] ~= self._destination[axis] then
-			local orientation = Driver._axis_to_orientation[axis]
-			if self._destination[axis] < pos[axis] then
-				orientation = -orientation
+			local forward = false
+			if self._destination[axis] > pos[axis] then
+				forward = true
 			end
 			
-			self:_move(orientation)
+			if axis == 'y' then
+				if forward then
+					if turtle.detectUp() then
+						if not try(function() self:dig_up() end) then
+							Exception("Path blocked")
+						end
+					end
+					
+					turtle.up()
+				else
+					if turtle.detectDown() then
+						if not try(function() self:dig_down() end) then
+							Exception("Path blocked")
+						end
+					end
+					
+					turtle.down()
+				end
+			else
+				local orientation
+				if axis == 'x' then
+					orientation = Orientation.X
+				else
+					orientation = Orientation.Z
+				end
+				
+				if not forward then
+					orientation = orientation:opposite()
+				end
+				
+				self:orient(orientation)
+				if turtle.detect() then
+					if not try(function() self:dig() end) then
+						Exception("Path blocked")
+					end
+				end
+				turtle.forward()
+			end
+			
 			break
 		end
 	end
 	
 	ensure(pos ~= self:_get_pos())
-end
-
-function Driver:_move(direction)
-	local old_pos = self:_get_pos()
-	if math.abs(direction) == Driver.Y then
-		if direction == Driver.UP then
-			if turtle.detectUp() then
-				if self._may_dig[axis] then
-					turtle.digUp()
-				else
-					Exception("Path blocked")
-				end
-			end
-			
-			turtle.up()
-		else
-			if turtle.detectDown() then
-				if self._may_dig[axis] then
-					turtle.digDown()
-				else
-					Exception("Path blocked")
-				end
-			end
-			
-			turtle.down()
-		end
-	else
-		self:orient(direction)
-		if turtle.detect() then
-			if self._may_dig[axis] then
-				turtle.dig()
-			else
-				Exception("Path blocked")
-			end
-		end
-		turtle.forward()
-	end
 end
 
 -- TODO perhaps buffer location (only changes in _move)
@@ -215,17 +220,33 @@ function Driver:_load_orientation()
 	local p1 = self:_get_pos()
 	local p2 = nil  -- = pos after moving forward 
 	for i=1,4 do
-		local success = try(self.forward, self)
-		if success then
+		if try(self.forward, self) then
 			p2 = self:_get_pos()
 			self:back()
 			break
 		end
 		self:turn_right()
 	end
+	
 	if not p2 then
-		Exception("Disoriented")  -- we are surrounded by blocks or out of fuel
-		-- TODO as a last desparation move we might try to dig the tile in front of us
+		if turtle.getFuelLevel() == 0 then
+			Exception("Disoriented and out of fuel")
+		end
+		
+		-- find a block to mine
+		for i=1,4 do
+			if try(function() self:dig() end) then
+				self:forward()
+				p2 = self:_get_pos()
+				self:back()
+				break
+			end
+			self:turn_right()
+		end
+		
+		if not p2 then
+			Exception("Disoriented")  -- we are surrounded by blocks or out of fuel
+		end
 	end
 	
 	local dp = p2 - p1
@@ -233,24 +254,24 @@ function Driver:_load_orientation()
 	if dp.x ~= 0 then
 		assert(dp.z == 0)
 		if dp.x > 0 then
-			self._orientation = Driver.X
+			self._orientation = Orientation.X
 		else
-			self._orientation = -Driver.X
+			self._orientation = Orientation.X:opposite()
 		end
 	else
 		assert(dp.x == 0)
 		if dp.z > 0 then
-			self._orientation = Driver.Z
+			self._orientation = Orientation.Z
 		else
-			self._orientation = -Driver.Z
+			self._orientation = Orientation.Z:opposite()
 		end
 	end
+	
+	ensure(self._orientation ~= nil)
 end
 
 function Driver:_has_reached_destination()
-	local ret = self._destination == nil or table.equals(self._destination, self:_get_pos())
-	print(ret)
-	return ret
+	return self._destination == nil or table.equals(self._destination, self:_get_pos())
 end
 
 end)
