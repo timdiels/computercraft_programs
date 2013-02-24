@@ -1,0 +1,7 @@
+-- sniffs all rednet traffic
+rednet.open("top")
+while true do
+	sender, message = rednet.receive()
+	assert(sender)
+	print(sender..': '..message)
+end
