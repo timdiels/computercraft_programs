@@ -16,7 +16,7 @@ Driver._STATE_FILE = "/driver.state"
 
 function Driver:new()
 	local obj = Object.new(self)
-	obj:_load()
+	obj._load()
 	return obj
 end
 
@@ -30,7 +30,7 @@ function Driver:_load()
 	
 	-- resume movement if we were moving
 	if self._destination then
-		self:_move_to_destination()
+		self._move_to_destination()
 	end
 end
 
@@ -44,12 +44,12 @@ end
 
 function Driver:orient(orientation)
 	require_(orientation ~= nil, 1)
-	self:_load_orientation()
-	if orientation == self._orientation:left() then
-		self:turn_left()
+	self._load_orientation()
+	if orientation == self._orientation.left() then
+		self.turn_left()
 	else
 		while self._orientation ~= orientation do
-			self:turn_right()
+			self.turn_right()
 		end
 	end
 end
@@ -81,29 +81,29 @@ function Driver:go_to(destination, movement_order, may_dig)
 	self._destination = destination
 	self._movement_order = movement_order
 	self._may_dig = may_dig
-	self:_save()
+	self._save()
 
-	self:_move_to_destination()
+	self._move_to_destination()
 end
 
 function Driver:turn_left()
 	turtle.turnLeft()
 	if self._orientation then
-		self._orientation = self._orientation:left()
+		self._orientation = self._orientation.left()
 	end
 end
 
 function Driver:turn_right()
 	turtle.turnRight()
 	if self._orientation then
-		self._orientation = self._orientation:right()
+		self._orientation = self._orientation.right()
 	end
 end
 
 function Driver:dig()
 	local may_dig
 	if self._orientation then
-		local axis = self._orientation:get_axis()
+		local axis = self._orientation.get_axis()
 		may_dig = self._may_dig[axis]
 	else
 		may_dig = self._may_dig["x"] and self._may_dig["z"]
@@ -117,7 +117,7 @@ function Driver:dig()
 end
 	
 function Driver:dig_up()
-	if self._may_dig[axis] then
+	if self._may_dig["y"] then
 		turtle.digUp()
 	else
 		Exception("Not allowed to dig along axis: y")
@@ -125,7 +125,7 @@ function Driver:dig_up()
 end
 
 function Driver:dig_down()
-	if self._may_dig[axis] then
+	if self._may_dig["y"] then
 		turtle.digDown()
 	else
 		Exception("Not allowed to dig along axis: y")
@@ -133,19 +133,19 @@ function Driver:dig_down()
 end
 
 function Driver:_move_to_destination()
-	while not self:_has_reached_destination() do
-		self:_move_one_tile()
+	while not self._has_reached_destination() do
+		self._move_one_tile()
 	end
 	
 	-- destination reached
 	self._destination = nil
-	self:_save()
+	self._save()
 end
 
 function Driver:_move_one_tile()
-	require_(not self:_has_reached_destination())
+	require_(not self._has_reached_destination())
 	
-	local pos = self:_get_pos()
+	local pos = self._get_pos()
 	for _, axis in pairs(self._movement_order) do
 		if pos[axis] ~= self._destination[axis] then
 			local forward = false
@@ -156,7 +156,7 @@ function Driver:_move_one_tile()
 			if axis == 'y' then
 				if forward then
 					if turtle.detectUp() then
-						if not try(function() self:dig_up() end) then
+						if not try(self.dig_up) then
 							Exception("Path blocked")
 						end
 					end
@@ -164,7 +164,8 @@ function Driver:_move_one_tile()
 					turtle.up()
 				else
 					if turtle.detectDown() then
-						if not try(function() self:dig_down() end) then
+						print(self)
+						if not try(self.dig_down) then
 							Exception("Path blocked")
 						end
 					end
@@ -180,12 +181,12 @@ function Driver:_move_one_tile()
 				end
 				
 				if not forward then
-					orientation = orientation:opposite()
+					orientation = orientation.opposite()
 				end
 				
-				self:orient(orientation)
+				self.orient(orientation)
 				if turtle.detect() then
-					if not try(function() self:dig() end) then
+					if not try(self.dig) then
 						Exception("Path blocked")
 					end
 				end
@@ -196,7 +197,7 @@ function Driver:_move_one_tile()
 		end
 	end
 	
-	ensure(pos ~= self:_get_pos())
+	ensure(pos ~= self._get_pos())
 end
 
 -- TODO perhaps buffer location (only changes in _move)
@@ -214,15 +215,15 @@ function Driver:_load_orientation()
 		return  -- already loaded
 	end
 	
-	local p1 = self:_get_pos()
+	local p1 = self._get_pos()
 	local p2 = nil  -- = pos after moving forward 
 	for i=1,4 do
-		if try(self.forward, self) then
-			p2 = self:_get_pos()
-			self:back()
+		if try(self.forward) then
+			p2 = self._get_pos()
+			self.back()
 			break
 		end
-		self:turn_right()
+		self.turn_right()
 	end
 	
 	if not p2 then
@@ -232,13 +233,13 @@ function Driver:_load_orientation()
 		
 		-- find a block to mine
 		for i=1,4 do
-			if try(function() self:dig() end) then
-				self:forward()
-				p2 = self:_get_pos()
-				self:back()
+			if try(self.dig) then
+				self.forward()
+				p2 = self._get_pos()
+				self.back()
 				break
 			end
-			self:turn_right()
+			self.turn_right()
 		end
 		
 		if not p2 then
@@ -253,14 +254,14 @@ function Driver:_load_orientation()
 		if dp.x > 0 then
 			self._orientation = Orientation.X
 		else
-			self._orientation = Orientation.X:opposite()
+			self._orientation = Orientation.X.opposite()
 		end
 	else
 		assert(dp.x == 0)
 		if dp.z > 0 then
 			self._orientation = Orientation.Z
 		else
-			self._orientation = Orientation.Z:opposite()
+			self._orientation = Orientation.Z.opposite()
 		end
 	end
 	
@@ -268,7 +269,7 @@ function Driver:_load_orientation()
 end
 
 function Driver:_has_reached_destination()
-	return self._destination == nil or table.equals(self._destination, self:_get_pos())
+	return self._destination == nil or table.equals(self._destination, self._get_pos())
 end
 
 end)
