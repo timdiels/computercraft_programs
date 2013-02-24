@@ -7,9 +7,6 @@
 
 -- TODO Does dig fail when inventory is full? We assume as much in our miner!!
 
--- Refactors:
--- TODO add an Axis/Orientation class or something
-
 -- TODO moving through gravel
 catch(function()
 
