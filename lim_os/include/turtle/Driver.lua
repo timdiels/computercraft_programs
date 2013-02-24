@@ -54,28 +54,6 @@ function Driver:orient(orientation)
 	end
 end
 
-function Driver:up()
-	if turtle.detectUp() then
-		turtle.digUp()
-	end
-	turtle.up()
-end
-
-function Driver:down()
-	if turtle.detectDown() then
-		turtle.digDown()
-	end
-	turtle.down()
-end
-
-function Driver:forward()
-	turtle.forward()
-end
-
-function Driver:back()
-	turtle.back()
-end
-
 -- See the goto program for an example
 function Driver:go_to(destination, movement_order, may_dig)
 	self._destination = destination
@@ -100,7 +78,7 @@ function Driver:turn_right()
 	end
 end
 
-function Driver:dig()
+function Driver:_dig()
 	local may_dig
 	if self._orientation then
 		local axis = self._orientation.get_axis()
@@ -116,7 +94,7 @@ function Driver:dig()
 	end
 end
 	
-function Driver:dig_up()
+function Driver:_dig_up()
 	if self._may_dig["y"] then
 		turtle.digUp()
 	else
@@ -124,7 +102,7 @@ function Driver:dig_up()
 	end
 end
 
-function Driver:dig_down()
+function Driver:_dig_down()
 	if self._may_dig["y"] then
 		turtle.digDown()
 	else
@@ -156,7 +134,7 @@ function Driver:_move_one_tile()
 			if axis == 'y' then
 				if forward then
 					if turtle.detectUp() then
-						if not try(self.dig_up) then
+						if not try(self._dig_up) then
 							Exception("Path blocked")
 						end
 					end
@@ -165,7 +143,7 @@ function Driver:_move_one_tile()
 				else
 					if turtle.detectDown() then
 						print(self)
-						if not try(self.dig_down) then
+						if not try(self._dig_down) then
 							Exception("Path blocked")
 						end
 					end
@@ -186,7 +164,7 @@ function Driver:_move_one_tile()
 				
 				self.orient(orientation)
 				if turtle.detect() then
-					if not try(self.dig) then
+					if not try(self._dig) then
 						Exception("Path blocked")
 					end
 				end
@@ -218,9 +196,9 @@ function Driver:_load_orientation()
 	local p1 = self._get_pos()
 	local p2 = nil  -- = pos after moving forward 
 	for i=1,4 do
-		if try(self.forward) then
+		if try(turtle.forward) then
 			p2 = self._get_pos()
-			self.back()
+			turtle.back()
 			break
 		end
 		self.turn_right()
@@ -233,10 +211,10 @@ function Driver:_load_orientation()
 		
 		-- find a block to mine
 		for i=1,4 do
-			if try(self.dig) then
-				self.forward()
+			if try(self._dig) then
+				turtle.forward()
 				p2 = self._get_pos()
-				self.back()
+				turtle.back()
 				break
 			end
 			self.turn_right()
