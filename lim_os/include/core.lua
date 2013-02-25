@@ -49,7 +49,7 @@ local function AssertionException(message, level)
 	error({type="AssertionException", message=message}, level+1)
 end
 
-function assert(condition, message, level)
+function assert(condition, level, message)
 	level = level or 1
 	message = message or "Assertion failed"
 	if not condition then
