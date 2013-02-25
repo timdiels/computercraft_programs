@@ -9,21 +9,18 @@ function include(file)
 	assert(shell.run("/lim_os/include/"..file), 2, "Error in included file")
 end
 
--- basic Exception
-function Exception(message)
-	error({type="Exception", message=message}, 2)
-end
+-----------------
+-- Include core
+-----------------
 
 include("core/assert.lua")
 include("core/debug.lua")
+include("core/exceptions.lua")
 include("core/oo.lua")
 include("core/io.lua")
 include("core/table.lua")
 include("core/turtle.lua")
 
------------------
--- Include core
------------------
 
 ---------------------------------------------------------------
 -- Include everything else here too (to avoid including things twice)

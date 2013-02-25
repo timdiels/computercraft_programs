@@ -31,3 +31,8 @@ end
 function catch(func)
 	xpcall(func, handle_exception)
 end
+
+-- basic Exception
+function Exception(message)
+	error({type="Exception", message=message}, 2)
+end
