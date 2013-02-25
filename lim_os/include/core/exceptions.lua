@@ -26,6 +26,7 @@ function try(...)
 	return xpcall(function() f(unpack(arg)) end, noop)
 end
 
+-- catches exceptions, prints them properly, then crashes the application
 -- func: a function with no args that returns nothing
 function catch(func)
 	xpcall(func, handle_exception)
