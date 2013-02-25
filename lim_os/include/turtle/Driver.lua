@@ -205,8 +205,6 @@ function Driver:_move(direction)
 	if turtle.getFuelLevel() == 0 then
 		Exception("Out of fuel")
 	end
-	print(direction)
-	print(Direction.FORWARD)
 	
 	-- keep trying:
 	-- * a player/mob could be in the way
