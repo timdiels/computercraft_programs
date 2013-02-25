@@ -7,52 +7,9 @@
 
 -- TODO Does dig fail when inventory is full? We assume as much in our miner!!
 
+-- Note: you can have only one Driver instance (because of state saving)
+
 catch(function()
-
--- TODO extract into other files
-Direction = Object:new()
-Direction.FORWARD = Direction:new()
-Direction.UP = Direction:new()
-Direction.DOWN = Direction:new()
-
-ForwardEngine = Object:new()
-function ForwardEngine.dig()
-	return turtle.dig()
-end
-
-function ForwardEngine.detect()
-	return turtle.detect()
-end
-
-function ForwardEngine.move()
-	return turtle.forward()
-end
-
-UpEngine = Object:new()
-function UpEngine.dig()
-	return turtle.digUp()
-end
-
-function UpEngine.detect()
-	return turtle.detectUp()
-end
-
-function UpEngine.move()
-	return turtle.up()
-end
-
-DownEngine = Object:new()
-function DownEngine.dig()
-	return turtle.digDown()
-end
-
-function DownEngine.detect()
-	return turtle.detectDown()
-end
-
-function DownEngine.move()
-	return turtle.down()
-end
 
 Driver = Object:new()
 

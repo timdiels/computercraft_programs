@@ -262,4 +262,8 @@ end
 ---------------------------------------------------------------
 
 include("Orientation.lua")
+include("turtle/Direction.lua")
+include("turtle/UpEngine.lua")
+include("turtle/DownEngine.lua")
+include("turtle/ForwardEngine.lua")
 include("turtle/Driver.lua")
