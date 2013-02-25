@@ -30,7 +30,8 @@ end
 
 -- exactly like pcall, but doesn't display thrown error
 function try(...)
-	return xpcall(unpack(arg), noop)
+	local f = table.remove(arg, 1)
+	return xpcall(function() f(unpack(arg)) end, noop)
 end
 
 -- func: a function with no args that returns nothing
