@@ -6,6 +6,6 @@ catch(function()
 
 local driver = Driver:new()
 local dest = vector.new(tonumber(args[1]), tonumber(args[2]), tonumber(args[3]))
-driver.go_to(dest, {'z', 'y', 'x'}, {x=true, y=true, z=true})
+driver.go_to(dest, {args[4], args[5], args[6]}, {x=true, y=true, z=true})
 
 end)
