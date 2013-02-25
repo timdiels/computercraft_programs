@@ -34,9 +34,7 @@ function try(...)
 end
 
 -- func: a function with no args that returns nothing
-function catch(func, handler)
-	-- TODO use handler arg to try to handle exception
-	-- handler returns nil if handled, the error object otherwise
+function catch(func)
 	xpcall(func, handle_exception)
 end
 

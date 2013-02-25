@@ -7,7 +7,6 @@
 
 -- TODO Does dig fail when inventory is full? We assume as much in our miner!!
 
--- TODO moving through gravel
 catch(function()
 
 Driver = Object:new()
@@ -120,6 +119,30 @@ function Driver:_move_to_destination()
 	self._save()
 end
 
+-- move forward and dig as much as necessary to actually manage to move forward (i.e. deal with gravel)
+function Driver:_forward()
+	if turtle.getFuelLevel() == 0 then
+		Exception("Out of fuel")
+	end
+	
+	-- keep trying:
+	-- * a player/mob could be in the way
+	-- * a gravel could fall on top
+	while true do
+		if turtle.detect() then
+			if not try(self._dig) then
+				Exception("Path blocked")
+			end
+		end
+		
+		if try(turtle.forward) then
+			break
+		end
+		
+		os.sleep(0.5)
+	end
+end
+
 function Driver:_move_one_tile()
 	require_(not self._has_reached_destination())
 	
@@ -142,7 +165,6 @@ function Driver:_move_one_tile()
 					turtle.up()
 				else
 					if turtle.detectDown() then
-						print(self)
 						if not try(self._dig_down) then
 							Exception("Path blocked")
 						end
@@ -163,12 +185,7 @@ function Driver:_move_one_tile()
 				end
 				
 				self.orient(orientation)
-				if turtle.detect() then
-					if not try(self._dig) then
-						Exception("Path blocked")
-					end
-				end
-				turtle.forward()
+				self._forward()
 			end
 			
 			break
@@ -211,8 +228,7 @@ function Driver:_load_orientation()
 		
 		-- find a block to mine
 		for i=1,4 do
-			if try(self._dig) then
-				turtle.forward()
+			if try(self._forward()) then
 				p2 = self._get_pos()
 				turtle.back()
 				break

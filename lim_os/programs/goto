@@ -1,4 +1,4 @@
--- Go to (arg1, arg2, arg3)
+-- Go to (arg1, arg2, arg3) in order of axi (arg4, arg5, arg6)
 
 args = { ... }
 
@@ -6,6 +6,6 @@ catch(function()
 
 local driver = Driver:new()
 local dest = vector.new(tonumber(args[1]), tonumber(args[2]), tonumber(args[3]))
-driver:go_to(dest, {'y', 'z', 'x'}, {x=true, y=true, z=true})
+driver.go_to(dest, {'z', 'y', 'x'}, {x=true, y=true, z=true})
 
 end)
