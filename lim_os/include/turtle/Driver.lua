@@ -9,9 +9,59 @@
 
 catch(function()
 
+-- TODO extract into other files
+Direction = Object:new()
+Direction.FORWARD = Direction:new()
+Direction.UP = Direction:new()
+Direction.DOWN = Direction:new()
+
+ForwardEngine = Object:new()
+function ForwardEngine.dig()
+	return turtle.dig()
+end
+
+function ForwardEngine.detect()
+	return turtle.detect()
+end
+
+function ForwardEngine.move()
+	return turtle.forward()
+end
+
+UpEngine = Object:new()
+function UpEngine.dig()
+	return turtle.digUp()
+end
+
+function UpEngine.detect()
+	return turtle.detectUp()
+end
+
+function UpEngine.move()
+	return turtle.up()
+end
+
+DownEngine = Object:new()
+function DownEngine.dig()
+	return turtle.digDown()
+end
+
+function DownEngine.detect()
+	return turtle.detectDown()
+end
+
+function DownEngine.move()
+	return turtle.down()
+end
+
 Driver = Object:new()
 
 Driver._STATE_FILE = "/driver.state"
+Driver._engines = {
+	[Direction.FORWARD]=ForwardEngine:new(),
+	[Direction.UP]=UpEngine:new(),
+	[Direction.DOWN]=DownEngine:new(),
+}
 
 function Driver:new()
 	local obj = Object.new(self)
@@ -77,35 +127,23 @@ function Driver:turn_right()
 	end
 end
 
-function Driver:_dig()
-	local may_dig
-	if self._orientation then
-		local axis = self._orientation.get_axis()
-		may_dig = self._may_dig[axis]
-	else
-		may_dig = self._may_dig["x"] and self._may_dig["z"]
-	end
+function Driver:_dig(direction)
+	local axis
 	
-	if may_dig then
-		turtle.dig()
+	if direction == Direction.FORWARD then
+		if self._orientation then
+			axis = self._orientation.get_axis()
+		else
+			axis = "x"
+		end
+	else
+		axis = "y"
+	end
+		
+	if self._may_dig[axis] then
+		self._engines[direction].dig()
 	else
 		Exception("Not allowed to dig along axis: "..axis)
-	end
-end
-	
-function Driver:_dig_up()
-	if self._may_dig["y"] then
-		turtle.digUp()
-	else
-		Exception("Not allowed to dig along axis: y")
-	end
-end
-
-function Driver:_dig_down()
-	if self._may_dig["y"] then
-		turtle.digDown()
-	else
-		Exception("Not allowed to dig along axis: y")
 	end
 end
 
@@ -119,30 +157,6 @@ function Driver:_move_to_destination()
 	self._save()
 end
 
--- move forward and dig as much as necessary to actually manage to move forward (i.e. deal with gravel)
-function Driver:_forward()
-	if turtle.getFuelLevel() == 0 then
-		Exception("Out of fuel")
-	end
-	
-	-- keep trying:
-	-- * a player/mob could be in the way
-	-- * a gravel could fall on top
-	while true do
-		if turtle.detect() then
-			if not try(self._dig) then
-				Exception("Path blocked")
-			end
-		end
-		
-		if try(turtle.forward) then
-			break
-		end
-		
-		os.sleep(0.5)
-	end
-end
-
 function Driver:_move_one_tile()
 	require_(not self._has_reached_destination())
 	
@@ -154,23 +168,12 @@ function Driver:_move_one_tile()
 				forward = true
 			end
 			
+			local direction
 			if axis == 'y' then
 				if forward then
-					if turtle.detectUp() then
-						if not try(self._dig_up) then
-							Exception("Path blocked")
-						end
-					end
-					
-					turtle.up()
+					direction = Direction.UP
 				else
-					if turtle.detectDown() then
-						if not try(self._dig_down) then
-							Exception("Path blocked")
-						end
-					end
-					
-					turtle.down()
+					direction = Direction.DOWN
 				end
 			else
 				local orientation
@@ -185,14 +188,42 @@ function Driver:_move_one_tile()
 				end
 				
 				self.orient(orientation)
-				self._forward()
+				direction = Direction.FORWARD
 			end
 			
+			self._move(direction)
 			break
 		end
 	end
 	
 	ensure(pos ~= self._get_pos())
+end
+
+-- TODO move into base Engine
+-- move a tile in direction and be extremely persistent about it
+function Driver:_move(direction)
+	if turtle.getFuelLevel() == 0 then
+		Exception("Out of fuel")
+	end
+	print(direction)
+	print(Direction.FORWARD)
+	
+	-- keep trying:
+	-- * a player/mob could be in the way
+	-- * a gravel could fall on top
+	while true do
+		if self._engines[direction].detect() then
+			if not try(self._dig, direction) then
+				Exception("Path blocked")
+			end
+		end
+		
+		if try(self._engines[direction].move) then
+			break
+		end
+		
+		os.sleep(0.5)
+	end
 end
 
 -- TODO perhaps buffer location (only changes in _move)
@@ -213,7 +244,7 @@ function Driver:_load_orientation()
 	local p1 = self._get_pos()
 	local p2 = nil  -- = pos after moving forward 
 	for i=1,4 do
-		if try(turtle.forward) then
+		if try(self._move, Direction.FORWARD) then
 			p2 = self._get_pos()
 			turtle.back()
 			break
@@ -222,23 +253,7 @@ function Driver:_load_orientation()
 	end
 	
 	if not p2 then
-		if turtle.getFuelLevel() == 0 then
-			Exception("Disoriented and out of fuel")
-		end
-		
-		-- find a block to mine
-		for i=1,4 do
-			if try(self._forward()) then
-				p2 = self._get_pos()
-				turtle.back()
-				break
-			end
-			self.turn_right()
-		end
-		
-		if not p2 then
-			Exception("Disoriented")  -- we are surrounded by blocks or out of fuel
-		end
+		Exception("Disoriented")  -- we are surrounded by unminable blocks or out of fuel
 	end
 	
 	local dp = p2 - p1
