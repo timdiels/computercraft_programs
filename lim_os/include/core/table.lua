@@ -19,3 +19,14 @@ function table.equals(a, b)
 	
 	return true
 end
+
+-- returns shallow copy
+function table.copy(a)
+	b = {}
+	
+	for k,v in pairs(a) do
+		b[k] ~= v
+	end
+	
+	return b
+end
