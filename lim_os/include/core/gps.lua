@@ -2,9 +2,8 @@
 
 -- throws GPSException when no reception
 -- returns a vector
-local _locate = gps.locate
-function gps.locate()
-	local x, y, z = _locate()
+function gps_.locate()
+	local x, y, z = gps.locate()
 	if not x then
 		error({type="GPSException", message="No GPS reception"})
 	end
