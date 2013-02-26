@@ -51,7 +51,6 @@ function Miner:_save()
 end
 
 function Miner:_go_home()
-	-- TODO if mining this would depend on which quadrant we're in
 	self._driver.go_to(self._home_pos, {'x', 'z', 'y'})
 end
 
@@ -104,7 +103,6 @@ function Miner:_mine()
 		end
 		
 		-- Move to next tile
-		-- TODO
 		self._set_next_mining_pos()
 		self._save()
 		self._go_to_mine()
@@ -141,7 +139,5 @@ function Miner:run()
 		end
 	end
 end
-
--- TODO add a Log class that logs to file
 
 end)
