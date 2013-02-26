@@ -20,6 +20,7 @@ include("core/oo.lua")
 include("core/io.lua")
 include("core/table.lua")
 include("core/turtle.lua")
+include("core/gps.lua")
 
 
 ---------------------------------------------------------------
@@ -32,3 +33,4 @@ include("turtle/UpEngine.lua")
 include("turtle/DownEngine.lua")
 include("turtle/ForwardEngine.lua")
 include("turtle/Driver.lua")
+include("turtle/Miner.lua")
