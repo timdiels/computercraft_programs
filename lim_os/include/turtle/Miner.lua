@@ -56,6 +56,10 @@ function Miner:_go_home()
 end
 
 function Miner:_go_to_mine()
+	if self._is_low_on_fuel() then
+		Exception("Low on fuel")
+	end
+	
 	self._driver.go_to(self._mining_pos, {'y', 'x', 'z'})
 end
 
@@ -104,27 +108,21 @@ function Miner:_mine()
 		self._set_next_mining_pos()
 		self._save()
 		self._go_to_mine()
-		
-		--if isLowOnFuel() then
-		--	goHome()
-		--end
 	end
 end
 
--- TODO return for fuel
---[[function Miner:_is_low_on_fuel()
-	local needed_fuel = (math.abs(destination.x - pos.x) +
-							math.abs(destination.y - pos.y) +
-							math.abs(destination.z - pos.z) +
+function Miner:_is_low_on_fuel()
+	local needed_fuel = (math.abs(self._mining_pos.x - self._home_pos.x) +
+							math.abs(self._mining_pos.y - self._home_pos.y) +
+							math.abs(self._mining_pos.z - self._home_pos.z) +
 							10)  -- margin of 10
-	return needed_fuel <= turtle.getFuelLevel()
+	return needed_fuel > turtle.getFuelLevel()
 end
-]]
 
 -- main miner loop
 function Miner:run()
 	while true do
-		if turtle.getFuelLevel() < 100 then
+		if turtle.getFuelLevel() < 200 then
 			Exception("Low on fuel")
 		end
 		
