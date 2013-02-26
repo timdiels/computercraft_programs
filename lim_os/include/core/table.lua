@@ -25,7 +25,7 @@ function table.copy(a)
 	b = {}
 	
 	for k,v in pairs(a) do
-		b[k] ~= v
+		b[k] = v
 	end
 	
 	return b
