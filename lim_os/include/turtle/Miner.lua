@@ -124,6 +124,10 @@ end
 -- main miner loop
 function Miner:run()
 	while true do
+		if turtle.getFuelLevel() < 100 then
+			Exception("Low on fuel")
+		end
+		
 		-- TODO drop stuff in chest
 		print("Press any key to continue mining")
 		read()
