@@ -10,12 +10,14 @@ function error(table_, level)
 end
 
 function print_exception(error_string)
-	prefix, e = string.match(error_string, "([^:]+:[^:]+: )(.+)")
+	local prefix, e = string.match(error_string, "([^:]+:[^:]+: )(.+)")
 	e = textutils.unserialize(e)
 	if type(e) == "table" then
 		e = e.message..' ('..e.type..')'
 	end
-	print(prefix..e)
+	local message = prefix..e
+	print(message)
+	log(message)
 end
 
 -- print and abort
