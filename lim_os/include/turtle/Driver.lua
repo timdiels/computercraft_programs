@@ -1,7 +1,8 @@
 -- Drives your turtle
--- Requires  to reach its destination (can handle an occasional interruption)
+-- Requires to reach its destination (can handle an occasional interruption)
 -- Assumes it can move backwards 1 tile when started
 -- Assumes that destination can be reached by first moving along x, then z, then y
+-- Handles GPS outage or moving out of range well
 -- Note: Driver is fuel agnostic (TODO might want to be able to ask Driver fuel distance from pos to some destination, based on the usual assumptions... Does failed movement cost fuel??)
 -- Note: any turtle needs gps to move reliably. And thus so does this
 
@@ -176,6 +177,17 @@ function Driver:_move(direction)
 		end
 		
 		if try(self._engines[direction].move) then
+			-- check whether or not we moved out of gps range
+			if not try(gps_.locate) then
+				turtle.back()
+				if try(gps_.locate) then
+					error({type="GPSOutOfRangeException", message="GPS out of range (or inaccurate)"})
+				end
+				
+				-- it wasn't out of range, gps probably just failing atm
+				turtle.forward()
+			end
+			
 			break
 		end
 		
@@ -185,7 +197,21 @@ end
 
 -- TODO perhaps buffer location (only changes in _move)
 function Driver:_get_pos()
-	return gps_.locate()
+	local first_print = true
+	
+	while true do
+		local status, retval = pcall(gps_.locate)
+		if status then
+			return retval
+		end
+		
+		if first_print then
+			print_exception(retval)
+			first_print = false
+		end
+		
+		os.sleep(10)
+	end
 end
 
 function Driver:_load_orientation()

@@ -6,7 +6,6 @@
 
 -- ENSURE: At any point in time, program must be able to handle being aborted and restarted
 
--- TODO deal with GPSException(by moving back a few positions and issuing a go home command, where user can then decide whether it went out of gps range, or whether gps was just temp broken)
 -- TODO mining higher when layer finished. Might even provide height to dig at as an arg...
 
 catch(function()
