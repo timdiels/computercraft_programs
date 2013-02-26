@@ -1,5 +1,5 @@
 -- Drives your turtle
--- Requires GPS to reach its destination (can handle an occasional interruption)
+-- Requires  to reach its destination (can handle an occasional interruption)
 -- Assumes it can move backwards 1 tile when started
 -- Assumes that destination can be reached by first moving along x, then z, then y
 -- Note: Driver is fuel agnostic (TODO might want to be able to ask Driver fuel distance from pos to some destination, based on the usual assumptions... Does failed movement cost fuel??)
@@ -62,6 +62,10 @@ end
 
 -- See the goto program for an example
 function Driver:go_to(destination, movement_order, may_dig)
+	assert(destination ~= nil)
+	assert(movement_order ~= nil)
+	may_dig = may_dig or {x=true, y=true, z=true}
+	
 	self._destination = destination
 	self._movement_order = movement_order
 	self._may_dig = may_dig
@@ -183,12 +187,7 @@ end
 
 -- TODO perhaps buffer location (only changes in _move)
 function Driver:_get_pos()
-	local x, y, z = gps.locate()
-	if not x then
-		error({type="GPSException", message="No GPS reception"})
-	end
-	pos = vector.new(x, y, z)
-	return pos
+	return gps_.locate()
 end
 
 function Driver:_load_orientation()

@@ -9,29 +9,31 @@
 
 -- ENSURE: At any point in time, program must be able to handle being aborted and restarted
 
-function(catch(
+catch(function()
 
-Miner = Object.new()
+Miner = Object:new()
 Miner._STATE_FILE = "/miner.state"
-
-local mining_layer = 6
-local mining_column = home_pos.z
-local mining_orientation = 0  -- or 2
 
 function Miner:new()
 	local obj = Object.new(self)
-	self._load()
+	obj._load()
 	return obj
 end
 
 -- Load from file
 function Miner:_load()
+	self._driver = Driver:new()
+	
 	-- load persistent things
 	if fs.exists(Miner._STATE_FILE) then
 		-- home_pos, state
 	else
-		self.home_pos = gps.locate()
-		self._go_home()
+		self._state = "initial"
+		self._home_pos = gps_.locate()
+		
+		--+2
+		self._last_mined_pos = table.copy(self._home_pos)
+		self._last_mined_pos.y = 7
 	end
 end
 
@@ -41,13 +43,14 @@ function Miner:_save()
 end
 
 function Miner:_go_home()
-	state = "going home"
-	destination = home_pos
+	self._state = "going home"
+	-- TODO if mining this would depend on which quadrant we're in
+	self._driver.go_to(self._home_pos, {'x', 'z', 'y'})
 end
 
 function Miner:_go_mine()
-	state = "mining"
-	Exception("TODO")
+	self._state = "mining"
+	self._driver.go_to(self._last_mined_pos, {'x', 'z', 'y'})
 end
 
 function Miner:_mine()
@@ -64,35 +67,34 @@ end
 end
 ]]
 
-function tick()
-	move()
-	
-	if hasReachedDestination() then
-		if state == "going home" then
+-- main miner loop
+function Miner:run()
+	while true do
+		if self._state == "initial" then
+			self._go_home()
+		elseif self._state == "going home" then
 			print("Press any key to continue mining")
 			read()
-			
+			self._go_mine()
 			-- TODO drop stuff in chest
-			self.go_mine()
-		elseif state == "going to mine" then
-			error("Have yet to implement")
-		elseif state == "mining" then
+		elseif self._state == "mining" then
 			-- TODO what if inventory full, ...
+			self._go_home()
 			if mine() then
 				--TODO destination = ... next
 			else
 				goHome()
 			end
-		elseif state == "error" then
+		elseif self._state == "error" then
 			exit()
 		else
-			assert(false, 1, "Invalid state: "..state)
+			assert(false, 1, "Invalid state: "..self._state)
 		end
+		
+		--if isLowOnFuel() then
+		--	goHome()
+		--end
 	end
-	
-	--if isLowOnFuel() then
-	--	goHome()
-	--end
 end
 
 -- TODO add a Log class that logs to file
