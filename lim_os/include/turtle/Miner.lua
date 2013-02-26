@@ -1,18 +1,18 @@
 -- Mine layers [6, 15] (<6 has bedrock)
--- Makes a shaft down from its starting location
--- Mines first quadrant, second, third, fourth
--- Returns when full, drops stuff in chest in front, refuses to leave unless everything dropped
--- Returns when fuel becomes low, expects chest with fuel to its left
--- Returning implies using gps to go to (x, z) spot, points back to its original orientation, moves up to starting y
+-- Makes a shaft down from its starting/home location, mines in circular, counter-clockwise fashion
+-- Returns when full
 -- Starting location is passed as program args and is referred to as Home location
 -- Startup script calls this thing!
 
 -- ENSURE: At any point in time, program must be able to handle being aborted and restarted
 
+-- TODO mining higher when layer finished
+
 catch(function()
 
 Miner = Object:new()
 Miner._STATE_FILE = "/miner.state"
+Miner._engines = turtle.engines
 
 function Miner:new()
 	local obj = Object.new(self)
@@ -25,36 +25,85 @@ function Miner:_load()
 	self._driver = Driver:new()
 	
 	-- load persistent things
-	if fs.exists(Miner._STATE_FILE) then
-		-- home_pos, state
+	local state = io.from_file(self._STATE_FILE)
+	if state then
+		table.merge(self, state)
+		self._home_pos = vector.from_table(self._home_pos)
+		self._mining_pos = vector.from_table(self._mining_pos)
 	else
-		self._state = "initial"
 		self._home_pos = gps_.locate()
 		
-		--+2
-		self._last_mined_pos = table.copy(self._home_pos)
-		self._last_mined_pos.y = 7
+		-- where we currently/will mine
+		self._mining_pos = table.copy(self._home_pos)
+		self._mining_pos.y = 7
+		
+		self._save()
 	end
 end
 
 -- Save state to file
 function Miner:_save()
-	error("Not implemented")
+	io.to_file(self._STATE_FILE, {
+		_home_pos = self._home_pos,
+		_mining_pos = self._mining_pos,
+	})
 end
 
 function Miner:_go_home()
-	self._state = "going home"
 	-- TODO if mining this would depend on which quadrant we're in
 	self._driver.go_to(self._home_pos, {'x', 'z', 'y'})
 end
 
-function Miner:_go_mine()
-	self._state = "mining"
-	self._driver.go_to(self._last_mined_pos, {'x', 'z', 'y'})
+function Miner:_go_to_mine()
+	self._driver.go_to(self._mining_pos, {'y', 'x', 'z'})
+end
+
+function Miner:_set_next_mining_pos()
+	-- make a drawing if you don't understand the math
+	local dp = self._mining_pos:sub(self._home_pos)
+	local d = math.max(math.abs(dp.x), math.abs(dp.z))
+	
+	-- Note: the ordering of the ifs is reverse chronological, which is crucial for correct behaviour
+	if (dp.x == d and dp.z == d) then
+		-- finished a square (!= tile), move to next square
+		self._mining_pos.x = self._mining_pos.x + 1
+		-- Note: d += 1
+	elseif dp.z == d then
+		-- go up (when viewing the XZ plane frontally with X pointing up, Z pointing right)
+		self._mining_pos.x = self._mining_pos.x + 1
+	elseif dp.x == -d then
+		-- go right
+		self._mining_pos.z = self._mining_pos.z + 1
+	elseif dp.z == -d then
+		-- go down 
+		self._mining_pos.x = self._mining_pos.x - 1
+	elseif dp.x == d then
+		-- go left
+		self._mining_pos.z = self._mining_pos.z - 1
+	end
 end
 
 function Miner:_mine()
-	return dig() and digDown() and digUp()
+	self._go_to_mine()
+	
+	while true do
+		-- Drill in all directions
+		for direction, engine in pairs(self._engines) do
+			if engine.detect() then
+				engine.dig()
+			end
+		end
+		
+		-- Move to next tile
+		-- TODO
+		self._set_next_mining_pos()
+		self._save()
+		self._go_to_mine()
+		
+		--if isLowOnFuel() then
+		--	goHome()
+		--end
+	end
 end
 
 -- TODO return for fuel
@@ -70,30 +119,14 @@ end
 -- main miner loop
 function Miner:run()
 	while true do
-		if self._state == "initial" then
-			self._go_home()
-		elseif self._state == "going home" then
-			print("Press any key to continue mining")
-			read()
-			self._go_mine()
-			-- TODO drop stuff in chest
-		elseif self._state == "mining" then
-			-- TODO what if inventory full, ...
-			self._go_home()
-			if mine() then
-				--TODO destination = ... next
-			else
-				goHome()
-			end
-		elseif self._state == "error" then
-			exit()
-		else
-			assert(false, 1, "Invalid state: "..self._state)
-		end
+		-- TODO drop stuff in chest
+		print("Press any key to continue mining")
+		read()
 		
-		--if isLowOnFuel() then
-		--	goHome()
-		--end
+		-- mine
+		_, e = pcall(self._mine)
+		debug.print(e)
+		self._go_home()
 	end
 end
 

@@ -3,8 +3,9 @@
 -- Assumes it can move backwards 1 tile when started
 -- Assumes that destination can be reached by first moving along x, then z, then y
 -- Note: Driver is fuel agnostic (TODO might want to be able to ask Driver fuel distance from pos to some destination, based on the usual assumptions... Does failed movement cost fuel??)
--- TODO when an orient is interrupted, it will not be continued next run
+-- Note: any turtle needs gps to move reliably. And thus so does this
 
+-- TODO when an orient is interrupted, it will not be continued next run
 -- TODO Does dig fail when inventory is full? We assume as much in our miner!!
 
 -- Note: you can have only one Driver instance (because of state saving)
@@ -14,11 +15,7 @@ catch(function()
 Driver = Object:new()
 
 Driver._STATE_FILE = "/driver.state"
-Driver._engines = {
-	[Direction.FORWARD]=ForwardEngine:new(),
-	[Direction.UP]=UpEngine:new(),
-	[Direction.DOWN]=DownEngine:new(),
-}
+Driver._engines = turtle.engines
 
 function Driver:new()
 	local obj = Object.new(self)
@@ -32,6 +29,7 @@ function Driver:_load()
 	local state = io.from_file(self._STATE_FILE)
 	if state then
 		table.merge(self, state)
+		self._destination = vector.from_table(self._destination)
 	end
 	
 	-- resume movement if we were moving
