@@ -1,5 +1,6 @@
 -- path: abs path
 -- if path does not exist, returns nil
+-- If saved state had metatables associated, you'll have to set them again (object's metatables aren't saved)
 function io.from_file(path)
 	require_(type(path) == "string")
 
