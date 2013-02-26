@@ -2,6 +2,7 @@
 
 -- throws GPSException when no reception
 -- returns a vector
+gps_ = {}
 function gps_.locate()
 	local x, y, z = gps.locate()
 	if not x then
