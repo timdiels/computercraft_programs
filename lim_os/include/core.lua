@@ -20,6 +20,7 @@ include("core/oo.lua")
 include("core/io.lua")
 include("core/table.lua")
 include("core/gps.lua")
+include("core/vector.lua")
 
 
 ---------------------------------------------------------------
