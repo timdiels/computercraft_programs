@@ -127,10 +127,11 @@ function Miner:run()
 		-- TODO drop stuff in chest
 		print("Press any key to continue mining")
 		read()
+		term.clear()
+		term.setCursorPos(1, 1)
 		
 		-- mine
-		_, e = pcall(self._mine)
-		debug.print(e)
+		xpcall(self._mine, print_exception)
 		self._go_home()
 	end
 end

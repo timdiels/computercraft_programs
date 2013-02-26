@@ -9,14 +9,18 @@ function error(table_, level)
 	_error(textutils.serialize(table_), level+1)
 end
 
--- print and abort
-local function handle_exception(error_string)
+function print_exception(error_string)
 	prefix, e = string.match(error_string, "([^:]+:[^:]+: )(.+)")
 	e = textutils.unserialize(e)
 	if type(e) == "table" then
 		e = e.message..' ('..e.type..')'
 	end
 	print(prefix..e)
+end
+
+-- print and abort
+local function handle_exception(error_string)
+	print_exception(error_string)
 	_error()  -- abort
 end
 
