@@ -58,3 +58,12 @@ function turtle.digUp()
 		Exception("Failed to dig up")
 	end
 end
+
+function turtle.is_inventory_empty()
+	for i=1,16 do
+		if turtle.getItemCount(i) > 0 then
+			return false
+		end
+	end
+	return true
+end

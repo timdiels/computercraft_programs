@@ -127,14 +127,18 @@ function Miner:run()
 		end
 		
 		-- TODO drop stuff in chest
-		print("Press any key to continue mining")
+		print("Press any key to continue/retry")
 		read()
 		term.clear()
 		term.setCursorPos(1, 1)
 		
-		-- mine
-		xpcall(self._mine, print_exception)
-		self._go_home()
+		if turtle.is_inventory_empty() then
+			-- mine
+			xpcall(self._mine, print_exception)
+			self._go_home()
+		else
+			print("Inventory not empty")
+		end
 	end
 end
 
