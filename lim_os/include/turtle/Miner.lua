@@ -3,6 +3,7 @@
 -- Returns when full
 -- Starting location is passed as program args and is referred to as Home location
 -- Startup script calls this thing!
+-- Drops stuff in chest top of home location
 
 -- ENSURE: At any point in time, program must be able to handle being aborted and restarted
 
@@ -124,18 +125,21 @@ function Miner:run()
 			Exception("Low on fuel")
 		end
 		
-		-- TODO drop stuff in chest
-		print("Press any key to continue/retry")
-		read()
+		print("Emptying inventory")
+		while not turtle.is_inventory_empty() do
+			self._engines[Direction.UP]:drop_all()
+			sleep(5)
+		end
+		
 		term.clear()
 		term.setCursorPos(1, 1)
 		
+		-- mine
+		xpcall(function() self:_mine() end, print_exception)
+		self:_go_home()
+		
 		if turtle.is_inventory_empty() then
-			-- mine
-			xpcall(function() self:_mine() end, print_exception)
-			self:_go_home()
-		else
-			print("Inventory not empty")
+			Exception("Did not mine anything, something's wrong")
 		end
 	end
 end

@@ -1,16 +1,21 @@
 catch(function()
 
-UpEngine = Object:new()
-function UpEngine.dig()
-	return turtle.digUp()
+UpEngine = Engine:new()
+
+function UpEngine:dig()
+	turtle.digUp()
 end
 
-function UpEngine.detect()
+function UpEngine:detect()
 	return turtle.detectUp()
 end
 
-function UpEngine.move()
-	return turtle.up()
+function UpEngine:move()
+	turtle.up()
+end
+
+function UpEngine:drop()
+	turtle.dropUp()
 end
 
 end)

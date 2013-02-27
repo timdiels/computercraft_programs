@@ -1,16 +1,21 @@
 catch(function()
 
-DownEngine = Object:new()
-function DownEngine.dig()
-	return turtle.digDown()
+DownEngine = Engine:new()
+
+function DownEngine:dig()
+	turtle.digDown()
 end
 
-function DownEngine.detect()
+function DownEngine:detect()
 	return turtle.detectDown()
 end
 
-function DownEngine.move()
-	return turtle.down()
+function DownEngine:move()
+	turtle.down()
+end
+
+function DownEngine:drop()
+	turtle.dropDown()
 end
 
 end)

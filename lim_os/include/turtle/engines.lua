@@ -1,5 +1,6 @@
 catch(function()
 
+include("turtle/Engine.lua")
 include("turtle/UpEngine.lua")
 include("turtle/DownEngine.lua")
 include("turtle/ForwardEngine.lua")

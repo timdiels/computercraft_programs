@@ -228,7 +228,7 @@ function Driver:_load_orientation()
 	for i=1,4 do
 		if try(self._move, self, Direction.FORWARD) then
 			p2 = self:_get_pos()
-			turtle.back()
+			turtle.back() --TODO persistent move backwards
 			break
 		end
 		self:turn_right()

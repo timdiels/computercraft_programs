@@ -1,16 +1,21 @@
 catch(function()
 
-ForwardEngine = Object:new()
-function ForwardEngine.dig()
-	return turtle.dig()
+ForwardEngine = Engine:new()
+
+function ForwardEngine:dig()
+	turtle.dig()
 end
 
-function ForwardEngine.detect()
+function ForwardEngine:detect()
 	return turtle.detect()
 end
 
-function ForwardEngine.move()
-	return turtle.forward()
+function ForwardEngine:move()
+	turtle.forward()
+end
+
+function ForwardEngine:drop()
+	turtle.drop()
 end
 
 end)
