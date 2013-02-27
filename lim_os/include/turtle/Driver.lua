@@ -6,7 +6,8 @@
 -- Note: Driver is fuel agnostic (TODO might want to be able to ask Driver fuel distance from pos to some destination, based on the usual assumptions... Does failed movement cost fuel??)
 -- Note: any turtle needs gps to move reliably. And thus so does this
 
--- TODO when an orient is interrupted, it will not be continued next run
+-- TODO stop saving
+-- TODO no longer handles going out of gps range well. Instead you might have to set it manually (because we no longer call gps all the time)
 -- TODO Does dig fail when inventory is full? We assume as much in our miner!!
 
 -- Note: you can have only one Driver instance (because of state saving)
@@ -122,6 +123,8 @@ function Driver:_move_one_tile()
 	require_(not self:_has_reached_destination())
 	
 	local pos = self:_get_pos()
+	local new_pos = vector.from_table(self._pos)
+	
 	for _, axis in pairs(self._movement_order) do
 		if pos[axis] ~= self._destination[axis] then
 			local forward = false
@@ -133,15 +136,27 @@ function Driver:_move_one_tile()
 			if axis == 'y' then
 				if forward then
 					direction = Direction.UP
+					new_pos.y = new_pos.y + 1
 				else
 					direction = Direction.DOWN
+					new_pos.y = new_pos.y - 1
 				end
 			else
 				local orientation
 				if axis == 'x' then
 					orientation = Orientation.X
+					if forward then
+						new_pos.x = new_pos.x + 1
+					else
+						new_pos.x = new_pos.x - 1
+					end
 				else
 					orientation = Orientation.Z
+					if forward then
+						new_pos.z = new_pos.z + 1
+					else
+						new_pos.z = new_pos.z - 1
+					end
 				end
 				
 				if not forward then
@@ -157,6 +172,7 @@ function Driver:_move_one_tile()
 		end
 	end
 	
+	self._pos = vector.from_table(new_pos)
 	ensure(pos ~= self:_get_pos())
 end
 
@@ -201,21 +217,25 @@ end
 
 -- TODO perhaps buffer location (only changes in _move)
 function Driver:_get_pos()
-	local first_print = true
-	
-	while true do
-		local status, retval = pcall(gps_.locate)
-		if status then
-			return retval
-		end
+	if not self._pos then
+		local first_print = true
 		
-		if first_print then
-			print_exception(retval)
-			first_print = false
+		while true do
+			local status, retval = pcall(gps_.locate)
+			if status then
+				self._pos = retval
+				break
+			end
+			
+			if first_print then
+				print_exception(retval)
+				first_print = false
+			end
+			
+			os.sleep(10)
 		end
-		
-		os.sleep(10)
 	end
+	return self._pos
 end
 
 function Driver:_load_orientation()
