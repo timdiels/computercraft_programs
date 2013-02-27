@@ -16,7 +16,7 @@ Miner._engines = turtle.engines
 
 function Miner:new()
 	local obj = Object.new(self)
-	obj._load()
+	obj:_load()
 	return obj
 end
 
@@ -34,10 +34,10 @@ function Miner:_load()
 		self._home_pos = gps_.locate()
 		
 		-- where we currently/will mine
-		self._mining_pos = table.copy(self._home_pos)
+		self._mining_pos = vector.from_table(self._home_pos)
 		self._mining_pos.y = 7
 		
-		self._save()
+		self:_save()
 	end
 end
 
@@ -50,15 +50,15 @@ function Miner:_save()
 end
 
 function Miner:_go_home()
-	self._driver.go_to(self._home_pos, {'x', 'z', 'y'})
+	self._driver:go_to(self._home_pos, {'x', 'z', 'y'})
 end
 
 function Miner:_go_to_mine()
-	if self._is_low_on_fuel() then
+	if self:_is_low_on_fuel() then
 		Exception("Low on fuel")
 	end
 	
-	self._driver.go_to(self._mining_pos, {'y', 'x', 'z'})
+	self._driver:go_to(self._mining_pos, {'y', 'x', 'z'})
 end
 
 function Miner:_set_next_mining_pos()
@@ -87,13 +87,13 @@ function Miner:_set_next_mining_pos()
 end
 
 function Miner:_mine()
-	self._go_to_mine()
+	self:_go_to_mine()
 	
 	while true do
 		-- Drill in all directions
 		for direction, engine in pairs(self._engines) do
-			if engine.detect() then
-				engine.dig()
+			if engine:detect() then
+				engine:dig()
 				if turtle.getItemCount(16) > 0 then
 					-- we might drop items if we dig more
 					Exception("Inventory full")
@@ -102,9 +102,9 @@ function Miner:_mine()
 		end
 		
 		-- Move to next tile
-		self._set_next_mining_pos()
-		self._save()
-		self._go_to_mine()
+		self:_set_next_mining_pos()
+		self:_save()
+		self:_go_to_mine()
 	end
 end
 
@@ -117,6 +117,7 @@ function Miner:_is_low_on_fuel()
 end
 
 -- main miner loop
+-- TODO don't load/save Driver state on the miner
 function Miner:run()
 	while true do
 		if turtle.getFuelLevel() < 200 then
@@ -131,8 +132,8 @@ function Miner:run()
 		
 		if turtle.is_inventory_empty() then
 			-- mine
-			xpcall(self._mine, print_exception)
-			self._go_home()
+			xpcall(function() self:_mine() end, print_exception)
+			self:_go_home()
 		else
 			print("Inventory not empty")
 		end

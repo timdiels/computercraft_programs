@@ -20,11 +20,15 @@ function Orientation:opposite()
 end
 
 function Orientation:get_axis()
-	if self._orientation == Orientation.X or self._orientation == Orientation.X.opposite() then
+	if self._orientation == Orientation.X or self._orientation == Orientation.X:opposite() then
 		return "x"
 	else
 		return "z"
 	end
+end
+
+function Orientation:is_orientation()
+	return true
 end
 
 Orientation.NORTH = Orientation:new()

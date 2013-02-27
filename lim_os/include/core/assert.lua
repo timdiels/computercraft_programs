@@ -15,10 +15,10 @@ end
 
 function require_(condition, level)
 	level = level or 1
-	assert(condition, 'Require failed', level+1)
+	assert(condition, level+1, 'Require failed')
 end
 
 function ensure(condition, level)
 	level = level or 1
-	assert(condition, 'Ensure failed', level+1)
+	assert(condition, level+1, 'Ensure failed')
 end

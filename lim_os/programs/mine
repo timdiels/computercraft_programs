@@ -1,6 +1,6 @@
 catch(function()
 
 local miner = Miner:new()
-miner.run()
+miner:run()
 
 end)
