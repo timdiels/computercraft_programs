@@ -19,33 +19,39 @@ Driver = Object:new()
 Driver._STATE_FILE = "/driver.state"
 Driver._engines = turtle.engines
 
-function Driver:new()
+function Driver:new(persistent)
 	local obj = Object.new(self)
-	obj:_load()
+	obj:_load(persistent)
 	return obj
 end
 
 -- Load from file
-function Driver:_load()
-	-- load persistent things
-	local state = io.from_file(self._STATE_FILE)
-	if state then
-		table.merge(self, state)
-		self._destination = vector.from_table(self._destination)
-	end
+function Driver:_load(persistent)
+	self._persistent = persistent  -- whether or not to save things
 	
-	-- resume movement if we were moving
-	if self._destination then
-		self:_move_to_destination()
+	if persistent then
+		-- load persistent things
+		local state = io.from_file(self._STATE_FILE)
+		if state then
+			table.merge(self, state)
+			self._destination = vector.from_table(self._destination)
+		end
+		
+		-- resume movement if we were moving
+		if self._destination then
+			self:_move_to_destination()
+		end
 	end
 end
 
 function Driver:_save()
-	io.to_file(self._STATE_FILE, {
-		_destination = self._destination,
-		_movement_order = self._movement_order,
-		_may_dig = self._may_dig,
-	})
+	if persistent then
+		io.to_file(self._STATE_FILE, {
+			_destination = self._destination,
+			_movement_order = self._movement_order,
+			_may_dig = self._may_dig,
+		})
+	end
 end
 
 function Driver:orient(orientation)
