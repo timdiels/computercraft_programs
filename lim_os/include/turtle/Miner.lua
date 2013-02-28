@@ -24,6 +24,8 @@ end
 -- Load from file
 function Miner:_load()
 	self._driver = Driver:new()
+	self._max_radius = 200
+	self._max_height = 30
 	
 	-- load persistent things
 	local state = io.from_file(self._STATE_FILE)
@@ -55,6 +57,10 @@ function Miner:_go_home()
 end
 
 function Miner:_go_to_mine()
+	if self._mining_pos.y > self._max_height then
+		error({type="FinishedMiningException", message="Finished mining this patch"})
+	end
+	
 	if self:_is_low_on_fuel() then
 		Exception("Low on fuel")
 	end
@@ -71,6 +77,11 @@ function Miner:_set_next_mining_pos()
 	if (dp.x == d and dp.z == d) then
 		-- finished a square (!= tile), move to next square
 		self._mining_pos.x = self._mining_pos.x + 1
+		if d == self._max_radius then
+			local height = self._mining_pos.y
+			self._mining_pos = vector.from_table(self._home_pos)
+			self._mining_pos.y = height + 3
+		end
 		-- Note: d += 1
 	elseif dp.z == d then
 		-- go up (when viewing the XZ plane frontally with X pointing up, Z pointing right)
@@ -135,8 +146,13 @@ function Miner:run()
 		term.setCursorPos(1, 1)
 		
 		-- mine
-		xpcall(function() self:_mine() end, print_exception)
+		_, err_str = xpcall(function() self:_mine() end, print_exception)
+		_, err = exception.deserialize(err_str)
 		self:_go_home()
+		
+		if err.type == 'FinishedMiningException' then
+			error(err)
+		end
 		
 		if turtle.is_inventory_empty() then
 			Exception("Did not mine anything, something's wrong")
