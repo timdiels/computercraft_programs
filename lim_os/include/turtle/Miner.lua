@@ -32,7 +32,7 @@ function Miner:_load()
 		self._home_pos = vector.from_table(self._home_pos)
 		self._mining_pos = vector.from_table(self._mining_pos)
 	else
-		self._home_pos = gps_.locate()
+		self._home_pos = gps_.persistent_locate()
 		
 		-- where we currently/will mine
 		self._mining_pos = vector.from_table(self._home_pos)

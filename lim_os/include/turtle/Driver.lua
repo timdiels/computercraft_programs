@@ -221,28 +221,9 @@ function Driver:_move(direction)
 	end
 end
 
--- TODO perhaps buffer location (only changes in _move)
-function Driver:_get_pos_gps()
-	local first_print = true
-		
-	while true do
-		local status, retval = pcall(gps_.locate)
-		if status then
-			return retval
-		end
-		
-		if first_print then
-			print_exception(retval)
-			first_print = false
-		end
-		
-		os.sleep(10)
-	end
-end
-
 function Driver:_get_pos()
 	if not self._pos then
-		self._pos = self:_get_pos_gps()
+		self._pos = gps_.persistent_locate()
 	end
 	return self._pos
 end
@@ -256,7 +237,7 @@ function Driver:_load_orientation()
 	local p2 = nil  -- = pos after moving forward 
 	for i=1,4 do
 		if try(self._move, self, Direction.FORWARD) then
-			p2 = self:_get_pos_gps()
+			p2 = gps_.persistent_locate()
 			turtle.back() --TODO persistent move backwards
 			break
 		end

@@ -11,3 +11,22 @@ function gps_.locate()
 	pos = vector.new(x, y, z)
 	return pos
 end
+
+-- keeps trying every 10 seconds
+function gps_.persistent_locate()
+	local first_print = true
+		
+	while true do
+		local status, retval = pcall(gps_.locate)
+		if status then
+			return retval
+		end
+		
+		if first_print then
+			print_exception(retval)
+			first_print = false
+		end
+		
+		os.sleep(10)
+	end
+end
