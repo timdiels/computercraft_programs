@@ -141,13 +141,14 @@ function Miner:run()
 			self._engines[Direction.UP]:drop_all()
 			sleep(5)
 		end
+		turtle.select(1)
 		
 		term.clear()
 		term.setCursorPos(1, 1)
 		
 		-- mine
-		_, err_str = xpcall(function() self:_mine() end, print_exception)
-		_, err = exceptions.deserialize(err_str)
+		_, err = xpcall(function() self:_mine() end, print_exception)
+		print(err)
 		self:_go_home()
 		
 		if err.type == 'FinishedMiningException' then

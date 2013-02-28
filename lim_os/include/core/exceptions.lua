@@ -11,12 +11,14 @@ end
 
 function print_exception(error_string)
 	local prefix, e = exceptions.deserialize(error_string)
+	local message = prefix
 	if type(e) == "table" then
-		e = e.message..' ('..e.type..')'
+		message = message.. e.message..' ('..e.type..')'
 	end
-	local message = prefix..e
 	print(message)
 	log(message)
+	
+	return e
 end
 
 -- print and abort
@@ -45,6 +47,7 @@ end
 exceptions = {}
 function exceptions.deserialize(str)
 	local prefix, e = string.match(str, "([^:]+:[^:]+: )(.+)")
+	print(e)
 	e = textutils.unserialize(e)
 	return prefix, e
 end
