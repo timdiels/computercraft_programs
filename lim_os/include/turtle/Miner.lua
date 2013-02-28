@@ -129,7 +129,6 @@ function Miner:_is_low_on_fuel()
 end
 
 -- main miner loop
--- TODO don't load/save Driver state on the miner
 function Miner:run()
 	while true do
 		if turtle.getFuelLevel() < 200 then
@@ -148,7 +147,6 @@ function Miner:run()
 		
 		-- mine
 		_, err = xpcall(function() self:_mine() end, print_exception)
-		print(err)
 		self:_go_home()
 		
 		if err.type == 'FinishedMiningException' then
