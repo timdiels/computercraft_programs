@@ -147,7 +147,7 @@ function Miner:run()
 		
 		-- mine
 		_, err_str = xpcall(function() self:_mine() end, print_exception)
-		_, err = exception.deserialize(err_str)
+		_, err = exceptions.deserialize(err_str)
 		self:_go_home()
 		
 		if err.type == 'FinishedMiningException' then

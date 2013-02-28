@@ -10,7 +10,7 @@ function error(table_, level)
 end
 
 function print_exception(error_string)
-	local prefix, e = exception.deserialize(error_string)
+	local prefix, e = exceptions.deserialize(error_string)
 	if type(e) == "table" then
 		e = e.message..' ('..e.type..')'
 	end
@@ -42,9 +42,9 @@ function Exception(message)
 	error({type="Exception", message=message}, 2)
 end
 
-exception = {}
-function exception.deserialize(str)
-	local prefix, e = string.match(error_string, "([^:]+:[^:]+: )(.+)")
+exceptions = {}
+function exceptions.deserialize(str)
+	local prefix, e = string.match(str, "([^:]+:[^:]+: )(.+)")
 	e = textutils.unserialize(e)
 	return prefix, e
 end
