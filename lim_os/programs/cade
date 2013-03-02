@@ -1,14 +1,14 @@
 -- Collect and dispense eggs
-
 -- Assumed orientation: towards eggs
+-- Collects eggs constantly, dispenses them every 25 minutes
 
-function timeUntilDispense()
-  local sec = common.getMinUntilInterval(25, 2) * 60
-  common.printEvent('Dispense eggs', sec)
-  return sec
+-- Load from file
+local _STATE_FILE = "cade.state"
+local state = io.from_file(_STATE_FILE)
+if not state then
+	state = {}
+	state.min_until_dispense = 0
 end
-
-local dispense_time = timeUntilDispense()
 
 while true do
   -- Collect
@@ -17,12 +17,20 @@ while true do
   -- Drop in dispenser
   common.dropDownAll()
 
-  if dispense_time < 0 then
-    -- Dispense some amount (hopefully empties it)
-    common.redPulse("bottom", 140)
-    dispense_time = timeUntilDispense()
+  if state.min_until_dispense <= 0 then
+	-- Retract piston to drop chickens
+	redstone.setOutput('top', false)
+	os.sleep(10)
+	
+    -- Extend piston and dispense all eggs
+	redstone.setOutput('top', true)
+	os.sleep(1)
+    shell.run("redpulse bottom 180 0.1")
+	
+	state.min_until_dispense = 25
   end
 
-  os.sleep(30)
-  dispense_time = dispense_time - 30
+  io.to_file(_STATE_FILE, state)
+  os.sleep(60)
+  state.min_until_dispense = state.min_until_dispense - 1
 end
