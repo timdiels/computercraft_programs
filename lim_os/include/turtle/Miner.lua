@@ -24,7 +24,7 @@ end
 -- Load from file
 function Miner:_load()
 	self._driver = Driver:new()
-	self._max_radius = 200
+	self._max_radius = 60
 	self._max_height = 30
 	
 	-- load persistent things
