@@ -54,7 +54,6 @@ end
 
 function Miner:_go_home()
 	self._driver:go_to(self._home_pos, {'x', 'z', 'y'})
-	self:_empty_inventory()
 end
 
 function Miner:_go_to_mine()
@@ -100,7 +99,7 @@ function Miner:_set_next_mining_pos()
 end
 
 function Miner:_mine()
-	if table.equals(self._pos, self._home_pos) then
+	if table.equals(self._driver:get_pos(), self._home_pos) then
 		self:_empty_inventory()
 	end
 	
@@ -165,6 +164,7 @@ function Miner:run()
 		if turtle.is_inventory_empty() then
 			Exception("Did not mine anything, something's wrong")
 		end
+		self:_empty_inventory()
 	end
 end
 

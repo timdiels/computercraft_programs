@@ -221,6 +221,10 @@ function Driver:_move(direction)
 	end
 end
 
+function Driver:get_pos()
+	return self:_get_pos()
+end
+
 function Driver:_get_pos()
 	if not self._pos then
 		self._pos = gps_.persistent_locate()
