@@ -54,6 +54,7 @@ end
 
 function Miner:_go_home()
 	self._driver:go_to(self._home_pos, {'x', 'z', 'y'})
+	self:_empty_inventory()
 end
 
 function Miner:_go_to_mine()
@@ -99,6 +100,10 @@ function Miner:_set_next_mining_pos()
 end
 
 function Miner:_mine()
+	if table.equals(self._pos, self._home_pos) then
+		self:_empty_inventory()
+	end
+	
 	self:_go_to_mine()
 	
 	while true do
@@ -128,6 +133,15 @@ function Miner:_is_low_on_fuel()
 	return needed_fuel > turtle.getFuelLevel()
 end
 
+function Miner:_empty_inventory()
+	print("Emptying inventory")
+	while not turtle.is_inventory_empty() do
+		self._engines[Direction.UP]:drop_all()
+		sleep(5)
+	end
+	turtle.select(1)
+end
+
 -- main miner loop
 function Miner:run()
 	while true do
@@ -136,13 +150,6 @@ function Miner:run()
 			self:_go_home()
 			error(err)
 		end
-		
-		print("Emptying inventory")
-		while not turtle.is_inventory_empty() do
-			self._engines[Direction.UP]:drop_all()
-			sleep(5)
-		end
-		turtle.select(1)
 		
 		term.clear()
 		term.setCursorPos(1, 1)
