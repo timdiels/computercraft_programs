@@ -132,7 +132,9 @@ end
 function Miner:run()
 	while true do
 		if turtle.getFuelLevel() < 200 then
-			Exception("Low on fuel")
+			_, err = xpcall(function() Exception("Low on fuel") end, print_exception)
+			self:_go_home()
+			error(err)
 		end
 		
 		print("Emptying inventory")
