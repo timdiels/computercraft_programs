@@ -7,7 +7,6 @@ catch(function()
 
 Titan = Object:new()
 Titan._STATE_FILE = "/titan.state"
-Titan._engines = turtle.engines
 
 function Titan:new()
 	local obj = Object.new(self)
@@ -23,7 +22,7 @@ function Titan:run()
 	rednet.open('top')
 	while true do
 		local sender, msg, distance = rednet.receive()
-		msg = textutils.deserialize(msg)
+		msg = textutils.unserialize(msg)
 		if msg.user == 'limyreth' then
 			rednet.send(sender, 'lolololol')
 		end

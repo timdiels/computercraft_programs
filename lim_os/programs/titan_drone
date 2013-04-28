@@ -1,8 +1,10 @@
+args = { ... }
+
 catch(function()
 
 include("titan/Drone.lua")
 
-local drone = Drone:new()
+local drone = Drone:new(tonumber(args[1]))
 drone:run()
 
 end)

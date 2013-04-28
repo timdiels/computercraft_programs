@@ -1,6 +1,6 @@
 -- Worker drones of Titan
 
--- REQUIRES: is a mining turtle with unlimited fuel and a modem at left side
+-- REQUIRES: is a mining turtle with unlimited fuel and a modem at right side
 -- ENSURE: At any point in time, handle server crashes well
 
 -- TODO don't move through finished building chunks (basically just move towards building surface without digging or getting stuck! Will need a DroneDriver that takes that into account and has a dumber Driver of itself)
@@ -55,11 +55,11 @@ function Drone:_save()
 end
 
 function Drone:_fetch_mining_pos()
-	rednet.open('left')
+	rednet.open('right')
 	rednet.send(self._titan_id, textutils.serialize({user='limyreth'}))
 	local sender, msg, distance = rednet.receive()
 	print(msg)
-	rednet.close('left')
+	rednet.close('right')
 	
 	self._mining_pos = reply.whatevs
 end
