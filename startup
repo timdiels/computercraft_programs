@@ -1,2 +1,1 @@
 shell.run("/lim_os/startup")
-shell.run("mine")
