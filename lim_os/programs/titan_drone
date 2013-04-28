@@ -1,0 +1,8 @@
+catch(function()
+
+include("titan/Drone.lua")
+
+local drone = Drone:new()
+drone:run()
+
+end)
