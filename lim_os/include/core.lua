@@ -28,6 +28,7 @@ include("core/log.lua")
 -- Include everything else here too (to avoid including things twice)
 ---------------------------------------------------------------
 
+include("Queue.lua")
 include("Orientation.lua")
 
 if turtle then
