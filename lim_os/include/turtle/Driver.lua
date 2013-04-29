@@ -3,12 +3,9 @@
 -- Assumes it can move backwards 1 tile when started
 -- Assumes that destination can be reached by first moving along x, then z, then y
 -- Handles GPS outage or moving out of range well
--- Note: Driver is fuel agnostic (TODO might want to be able to ask Driver fuel distance from pos to some destination, based on the usual assumptions... Does failed movement cost fuel??)
--- Note: any turtle needs gps to move reliably. And thus so does this
+-- Requires: GPS (at most 2 gps calls after boot)
 
--- TODO stop saving
 -- TODO no longer handles going out of gps range well. Instead you might have to set it manually (because we no longer call gps all the time)
--- TODO Does dig fail when inventory is full? We assume as much in our miner!!
 
 -- Note: you can have only one Driver instance (because of state saving)
 
