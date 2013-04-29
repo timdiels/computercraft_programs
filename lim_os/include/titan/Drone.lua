@@ -15,7 +15,7 @@ DroneState.BUILDING = 3
 Drone = Object:new()
 Drone._STATE_FILE = "/drone.state"
 Drone._mining_height_min = 4
-Drone._mining_heigth_max = 160
+Drone._mining_height_max = 160
 Drone._engines = turtle.engines
 -- self._mining_pos: x, z coord of place to mine. y-coord is ignored
 
@@ -68,11 +68,10 @@ function Drone:_fetch_mining_pos()
 end
 
 function Drone:_mine()
-	self._mining_pos.y = self._mining_heigth_max + 1
+	self._mining_pos.y = self._mining_height_max + 1
 	self._driver:go_to(self._mining_pos, {'y', 'x', 'z'}, {x=false, y=false, z=false})
 	
-	local end_pos = vector.copy(self._mining_pos)
-	self._mining_pos.y = self._mining_heigth_min
+	self._mining_pos.y = self._mining_height_min
 	self._driver:go_to(self._mining_pos, {'y'}, {y=true})
 end
 
