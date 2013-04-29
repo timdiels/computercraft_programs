@@ -1,6 +1,7 @@
 catch(function()
 
 include("titan/MiningSystem.lua")
+include("titan/BuildSystem.lua")
 include("titan/Titan.lua")
 
 local titan = Titan:new()
