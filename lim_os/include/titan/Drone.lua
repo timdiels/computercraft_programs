@@ -14,7 +14,7 @@ DroneState.BUILDING = 3
 
 Drone = Object:new()
 Drone._STATE_FILE = "/drone.state"
-Drone._mining_height_min = 4
+Drone._mining_height_min = 5  -- bedrock goes up to height 4, and our AI doesn't handle bedrock
 Drone._mining_height_max = 160
 Drone._engines = turtle.engines
 -- self._mining_pos: x, z coord of place to mine. y-coord is ignored
