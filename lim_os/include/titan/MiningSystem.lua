@@ -20,12 +20,10 @@ function MiningSystem:_load()
 	if state then
 		table.merge(self, state)
 		self._home_pos = vector.from_table(self._home_pos)
-		self._mining_pos = vector.from_table(self._mining_pos)
+		self._last_pos = vector.from_table(self._last_pos)
 	else
 		self._home_pos = gps_.persistent_locate()
-		
-		-- where we currently/will mine
-		self._mining_pos = vector.from_table(self._home_pos)
+		self._last_pos = nil
 		
 		self:_save()
 	end
@@ -35,36 +33,40 @@ end
 function MiningSystem:_save()
 	io.to_file(self._STATE_FILE, {
 		_home_pos = self._home_pos,
-		_mining_pos = self._mining_pos,
+		_last_pos = self._last_pos,
 	})
 end
 
 -- returns next available mining pos and considers it assigned to whoever requested it
 function MiningSystem:get_next()
-	-- make a drawing if you don't understand the math
-	local dp = self._mining_pos:sub(self._home_pos)
-	local d = math.max(math.abs(dp.x), math.abs(dp.z))
-	
-	-- Note: the ordering of the ifs is reverse chronological, which is crucial for correct behaviour
-	if (dp.x == d and dp.z == d) then
-		-- finished a square (!= tile), move to next square
-		self._mining_pos.x = self._mining_pos.x + 1
-	elseif dp.z == d then
-		-- go up (when viewing the XZ plane frontally with X pointing up, Z pointing right)
-		self._mining_pos.x = self._mining_pos.x + 1
-	elseif dp.x == -d then
-		-- go right
-		self._mining_pos.z = self._mining_pos.z + 1
-	elseif dp.z == -d then
-		-- go down 
-		self._mining_pos.x = self._mining_pos.x - 1
-	elseif dp.x == d then
-		-- go left
-		self._mining_pos.z = self._mining_pos.z - 1
+	if self._last_pos == nil then
+		self._last_pos = vector.copy(self._home_pos)
+	else
+		-- make a drawing if you don't understand the math
+		local dp = self._last_pos:sub(self._home_pos)
+		local d = math.max(math.abs(dp.x), math.abs(dp.z))
+		
+		-- Note: the ordering of the ifs is reverse chronological, which is crucial for correct behaviour
+		if (dp.x == d and dp.z == d) then
+			-- finished a square (!= tile), move to next square
+			self._last_pos.x = self._last_pos.x + 1
+		elseif dp.z == d then
+			-- go up (when viewing the XZ plane frontally with X pointing up, Z pointing right)
+			self._last_pos.x = self._last_pos.x + 1
+		elseif dp.x == -d then
+			-- go right
+			self._last_pos.z = self._last_pos.z + 1
+		elseif dp.z == -d then
+			-- go down 
+			self._last_pos.x = self._last_pos.x - 1
+		elseif dp.x == d then
+			-- go left
+			self._last_pos.z = self._last_pos.z - 1
+		end
 	end
 	
 	self:_save()
-	return vector.copy(self._mining_pos)
+	return vector.copy(self._last_pos)
 end
 
 end)
