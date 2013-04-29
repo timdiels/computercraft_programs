@@ -1,7 +1,16 @@
 Queue = Object:new()
 
 function Queue:new()
-	return {first = 0, last = -1}
+	local obj = Object.new(self)
+	obj.first = 0
+	obj.last = -1
+	return obj
+end
+
+function Queue:from_table(t)
+	local q = Queue:new()
+	table.merge(q, t)
+	return q
 end
 
 function Queue:push_front(value)

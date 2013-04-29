@@ -34,6 +34,7 @@ function BuildSystem:_load()
 		table.merge(self, state)
 		self._home_chunk = vector.from_table(self._home_chunk)
 		self._current_chunk = vector.from_table(self._current_chunk)
+		self._build_queue = Queue:from_table(self._build_queue)
 	else
 		self._home_chunk = gps_.persistent_locate()
 		self._home_chunk.x = math.floor(self._home_chunk.x / CHUNK_SIZE)
@@ -43,7 +44,8 @@ function BuildSystem:_load()
 		
 		self._radius = 0
 		self._build_queue = Queue:new()
-		self:_build_queue:push_back(self._home_chunk)
+		self._build_queue:push_back(vector.copy(self._home_chunk))
+		self:_next_chunk()
 		
 		self:_save()
 	end
@@ -57,6 +59,7 @@ function BuildSystem:_save()
 		_radius = self._radius,
 		_x_offset = self._x_offset,
 		_z_offset = self._z_offset,
+		_build_queue = self._build_queue,
 	})
 end
 
@@ -78,7 +81,7 @@ function BuildSystem:get_next()
 	self:_save()
 	
 	local pos = vector.copy(self._current_chunk)
-	pos.mul(CHUNK_SIZE)
+	pos:mul(CHUNK_SIZE)
 	pos.x = pos.x + self._x_offset
 	pos.z = pos.z + self._z_offset
 	return pos

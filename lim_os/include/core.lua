@@ -23,12 +23,12 @@ include("core/gps.lua")
 include("core/vector.lua")
 include("core/log.lua")
 
+include("core/Queue.lua")
 
 ---------------------------------------------------------------
 -- Include everything else here too (to avoid including things twice)
 ---------------------------------------------------------------
 
-include("Queue.lua")
 include("Orientation.lua")
 
 if turtle then

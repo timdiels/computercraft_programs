@@ -56,7 +56,7 @@ function Drone:_query(contents)
 	while true do
 		local sender, msg, distance = rednet.receive()
 		msg = textutils.unserialize(msg)
-		if msg.user == 'limyreth' then
+		if sender == self._titan_id then
 			rednet.close('right')
 			return msg.contents
 		end
@@ -99,7 +99,7 @@ end
 function Drone:run()
 	while true do
 		if self._state == DroneState.IDLE then
-			if getItemCount(13) > 0 then
+			if turtle.getItemCount(13) > 0 then
 				self._state = DroneState.BUILDING
 			else
 				self:_request_mining_pos()
