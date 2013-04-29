@@ -1,5 +1,5 @@
 function vector.copy(t)
-	vector.from_table(t)
+	return vector.from_table(t)
 end
 
 function vector.from_table(t)
