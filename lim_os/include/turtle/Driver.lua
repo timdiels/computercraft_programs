@@ -4,6 +4,9 @@
 -- Assumes that destination can be reached by first moving along x, then z, then y
 -- Handles GPS outage or moving out of range well
 -- Requires: GPS (at most 2 gps calls after boot)
+-- Ensures:
+-- - Will happily move outside GPS range if you tell it to
+-- - Can handle gps interruptions due to storms just fine
 
 -- TODO no longer handles going out of gps range well. Instead you might have to set it manually (because we no longer call gps all the time)
 
@@ -200,17 +203,6 @@ function Driver:_move(direction)
 		
 		local engine = self._engines[direction]
 		if try(engine.move, engine) then
-			-- check whether or not we moved out of gps range
-			if not try(gps_.locate) then
-				turtle.back()
-				if try(gps_.locate) then
-					error({type="GPSOutOfRangeException", message="GPS out of range (or inaccurate)"})
-				end
-				
-				-- it wasn't out of range, gps probably just failing atm
-				turtle.forward()
-			end
-			
 			break
 		end
 		
