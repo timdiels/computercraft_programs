@@ -15,7 +15,7 @@ DroneState.BUILDING = 3
 Drone = Object:new()
 Drone._STATE_FILE = "/drone.state"
 Drone._mining_height_min = 4
-Drone._mining_heigth_max = 200
+Drone._mining_heigth_max = 160
 Drone._engines = turtle.engines
 -- self._mining_pos: x, z coord of place to mine. y-coord is ignored
 
@@ -37,11 +37,7 @@ function Drone:_load()
 		table.merge(self, state)
 		self._mining_pos = vector.from_table(self._mining_pos)
 	else
-		self._home_pos = gps_.persistent_locate()
-		
 		self._state = DroneState.IDLE
-		self._mining_pos = nil
-		
 		self:_save()
 	end
 end
@@ -54,24 +50,30 @@ function Drone:_save()
 	})
 end
 
-function Drone:_fetch_mining_pos()
+function Drone:_query(contents)
 	rednet.open('right')
-	rednet.send(self._titan_id, textutils.serialize({user='limyreth'}))
-	local sender, msg, distance = rednet.receive()
-	print(msg)
-	rednet.close('right')
-	
-	self._mining_pos = reply.whatevs
+	rednet.send(self._titan_id, textutils.serialize({user='limyreth', contents=contents}))
+	while true do
+		local sender, msg, distance = rednet.receive()
+		msg = textutils.unserialize(msg)
+		if msg.user == 'limyreth' then
+			rednet.close('right')
+			return msg.contents
+		end
+	end
+end
+
+function Drone:_fetch_mining_pos()
+	self._mining_pos = vector.from_table(self:_query({}))
 end
 
 function Drone:_mine()
-	local start_pos = self._mining_pos
-	start_pos.y = Drone._mining_heigth_max + 1
-	self._driver:go_to(start_pos, {'y', 'x', 'z'}, {x=false, y=false, z=false})
+	self._mining_pos.y = self._mining_heigth_max + 1
+	self._driver:go_to(self._mining_pos, {'y', 'x', 'z'}, {x=false, y=false, z=false})
 	
-	local end_pos = self._mining_pos
-	end_pos.y = Drone._mining_heigth_min
-	self._driver:go_to(end_pos, {'y'}, {y=true})
+	local end_pos = vector.copy(self._mining_pos)
+	self._mining_pos.y = self._mining_heigth_min
+	self._driver:go_to(self._mining_pos, {'y'}, {y=true})
 end
 
 -- Dumps all useless materials
@@ -88,7 +90,7 @@ function Drone:run()
 			self:_fetch_mining_pos()
 			self._state = DroneState.MINING
 		elseif self._state == DroneState.MINING then
-			self._mine()
+			self:_mine()
 			self._state = DroneState.IDLE
 		else
 			assert(false)
