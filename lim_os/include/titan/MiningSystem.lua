@@ -26,7 +26,6 @@ function MiningSystem:_load()
 		
 		-- where we currently/will mine
 		self._mining_pos = vector.from_table(self._home_pos)
-		self._mining_pos.y = 7
 		
 		self:_save()
 	end
