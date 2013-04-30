@@ -80,8 +80,7 @@ function BuildSystem:get_next()
 	
 	self:_save()
 	
-	local pos = vector.copy(self._current_chunk)
-	pos:mul(CHUNK_SIZE)
+	local pos = self._current_chunk * CHUNK_SIZE
 	pos.x = pos.x + self._x_offset
 	pos.z = pos.z + self._z_offset
 	return pos

@@ -78,7 +78,13 @@ function Drone:_build()
 	pos.y = pos.y - 1
 	self._driver:go_to(pos, {'y', 'x', 'z'}, {x=false, y=false, z=false})
 	
-	todobuild()
+	for i=1,16 do
+		if turtle.getItemCount(i) > 0 then
+			turtle.select(i)
+			break
+		end
+	end
+	turtle.placeUp()
 end
 
 function Drone:_mine()
