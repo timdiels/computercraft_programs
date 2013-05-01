@@ -100,7 +100,7 @@ end
 function BuildSystem:_generate_next_build_queue()
 	self._radius = self._radius + 2
 	
-	local max_y = self._home_pos.y + self._radius
+	local max_y = self._home_chunk.y + self._radius
 	if max_y <= self._MAX_HEIGHT then
 		for radius = 0, self._radius, 2 do
 			self:_build_square(max_y, radius)
@@ -110,7 +110,7 @@ function BuildSystem:_generate_next_build_queue()
 		max_y = MAX_HEIGHT
 	end
 	
-	local min_y = self._home_pos.y - self._radius
+	local min_y = self._home_chunk.y - self._radius
 	if min_y <= self._MAX_HEIGHT then
 		for radius = 0, self._radius, 2 do
 			self:_build_square(min_y, radius)
@@ -127,28 +127,33 @@ end
 
 -- queue chunks in clockwise order for building
 function BuildSystem:_build_square(y, radius)
-	require_(radius > 0)
 	require_(radius % 2 == 0)
 	
-	local right = self._home_pos.x + radius
-	local left = self._home_pos.x - radius
-	local top = self._home_pos.z - radius
-	local bottom = self._home_pos.z + radius
-	
-	for x = left, right-2, 2 do
-		self._build_queue:push_back(vector.new(x, y, top))
-	end
-	
-	for z = top, bottom, 2 do
-		self._build_queue:push_back(vector.new(right, y, z))
-	end
-	
-	for x = right, left+2, -2 do
-		self._build_queue:push_back(vector.new(x, y, bottom))
-	end
-	
-	for z = bottom, top, -2 do
-		self._build_queue:push_back(vector.new(left, y, z))
+	if radius == 0 then
+		local chunk = vector.copy(self._home_chunk)
+		chunk.y = y
+		self._build_queue:push_back(chunk)
+	else	
+		local right = self._home_chunk.x + radius
+		local left = self._home_chunk.x - radius
+		local top = self._home_chunk.z - radius
+		local bottom = self._home_chunk.z + radius
+		
+		for x = left, right-2, 2 do
+			self._build_queue:push_back(vector.new(x, y, top))
+		end
+		
+		for z = top, bottom, 2 do
+			self._build_queue:push_back(vector.new(right, y, z))
+		end
+		
+		for x = right, left+2, -2 do
+			self._build_queue:push_back(vector.new(x, y, bottom))
+		end
+		
+		for z = bottom, top, -2 do
+			self._build_queue:push_back(vector.new(left, y, z))
+		end
 	end
 end
 	

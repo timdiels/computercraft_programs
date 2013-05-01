@@ -1,5 +1,6 @@
 Queue = Object:new()
 
+-- queue of vectors
 function Queue:new()
 	local obj = Object.new(self)
 	obj.first = 0
@@ -10,6 +11,9 @@ end
 function Queue:from_table(t)
 	local q = Queue:new()
 	table.merge(q, t)
+	for i = q.first, q.last do
+		q[i] = vector.from_table(q[i])
+	end
 	return q
 end
 
