@@ -129,8 +129,6 @@ function Driver:_move_one_tile()
 	require_(not self:_has_reached_destination())
 	
 	local pos = self:_get_pos()
-	local new_pos = vector.from_table(self._pos)
-	
 	for _, axis in pairs(self._movement_order) do
 		if pos[axis] ~= self._destination[axis] then
 			local forward = false
@@ -138,51 +136,84 @@ function Driver:_move_one_tile()
 				forward = true
 			end
 			
-			local direction
-			if axis == 'y' then
-				if forward then
-					direction = Direction.UP
-					new_pos.y = new_pos.y + 1
-				else
-					direction = Direction.DOWN
-					new_pos.y = new_pos.y - 1
-				end
-			else
-				local orientation
-				if axis == 'x' then
-					orientation = Orientation.X
-					if forward then
-						new_pos.x = new_pos.x + 1
+			success, e = try(self._move_one, self, axis, forward)
+			if not success then
+				_, e = exceptions.deserialize(e)
+				debug.print(e)
+				if e.type == 'PathBlocked' then
+					-- attempt to unblock, most only works well with collisions between turtles
+					log("Path blocked, making an evasive manouver")
+					if math.random(0, 1) == 1 then
+						forward = true
 					else
-						new_pos.x = new_pos.x - 1
+						forward = false
+					end
+					
+					if axis == 'y' then
+						if math.random(0, 1) == 1 then
+							axis = 'y'
+						else
+							axis = 'x'
+						end
+					else
+						axis = 'y'
+					end
+					
+					if try(self._move_one, self, 'y', forward) then
+						os.sleep(1.5)
 					end
 				else
-					orientation = Orientation.Z
-					if forward then
-						new_pos.z = new_pos.z + 1
-					else
-						new_pos.z = new_pos.z - 1
-					end
+					error(e)
 				end
-				
-				if not forward then
-					orientation = orientation:opposite()
-				end
-				
-				self:orient(orientation)
-				direction = Direction.FORWARD
 			end
 			
-			self:_move(direction)
 			break
 		end
 	end
-	
-	self._pos = vector.from_table(new_pos)
-	ensure(pos ~= self:_get_pos())
 end
 
--- TODO move into base Engine
+function Driver:_move_one(axis, forward)
+	local new_pos = vector.copy(self._pos)
+	local direction
+	
+	if axis == 'y' then
+		if forward then
+			direction = Direction.UP
+			new_pos.y = new_pos.y + 1
+		else
+			direction = Direction.DOWN
+			new_pos.y = new_pos.y - 1
+		end
+	else
+		local orientation
+		if axis == 'x' then
+			orientation = Orientation.X
+			if forward then
+				new_pos.x = new_pos.x + 1
+			else
+				new_pos.x = new_pos.x - 1
+			end
+		else
+			orientation = Orientation.Z
+			if forward then
+				new_pos.z = new_pos.z + 1
+			else
+				new_pos.z = new_pos.z - 1
+			end
+		end
+		
+		if not forward then
+			orientation = orientation:opposite()
+		end
+		
+		self:orient(orientation)
+		direction = Direction.FORWARD
+	end
+	
+	self:_move(direction)
+	self._pos = new_pos
+end
+
 -- move a tile in direction and be extremely persistent about it
 function Driver:_move(direction)
 	assert(direction ~= nil)
@@ -194,9 +225,15 @@ function Driver:_move(direction)
 	-- keep trying:
 	-- * a player/mob could be in the way
 	-- * a gravel could fall on top
+	local retries = 0
 	while true do
 		if self._engines[direction]:detect() then
-			try(self._dig, self, direction)
+			if not try(self._dig, self, direction) then
+				retries = retries + 1
+				if retries > math.random(3, 6) then
+					error({type='PathBlocked', message='Path is blocked'})
+				end
+			end
 		end
 		
 		local engine = self._engines[direction]
@@ -204,9 +241,10 @@ function Driver:_move(direction)
 			break
 		end
 		
-		log("Path blocked, waiting a bit until retrying")
 		os.sleep(0.5)
 	end
+	
+	return true
 end
 
 function Driver:get_pos()
