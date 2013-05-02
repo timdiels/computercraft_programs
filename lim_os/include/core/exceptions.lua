@@ -14,6 +14,8 @@ function print_exception(error_string)
 	local message = prefix
 	if type(e) == "table" then
 		message = message.. e.message..' ('..e.type..')'
+	else
+		message = error_string
 	end
 	print(message)
 	log(message)
