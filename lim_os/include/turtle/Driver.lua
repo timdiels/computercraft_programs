@@ -67,8 +67,8 @@ end
 
 -- See the goto program for an example
 function Driver:go_to(destination, movement_order, may_dig)
-	assert(destination ~= nil)
-	assert(movement_order ~= nil)
+	require_(destination ~= nil)
+	require_(movement_order ~= nil)
 	may_dig = may_dig or {x=true, y=true, z=true}
 	
 	self._destination = destination
