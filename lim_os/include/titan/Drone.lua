@@ -17,6 +17,7 @@ Drone._STATE_FILE = "/drone.state"
 Drone._mining_height_min = 5  -- bedrock goes up to height 4, and our AI doesn't handle bedrock
 Drone._mining_height_max = 160
 Drone._engines = turtle.engines
+Drone._item_slots = 16
 -- self._target_pos: x, z coord of place to mine/build. y-coord of mining is ignored, y-coord of build pos points to lowest spot to build at
 
 -- titan_id: computer id of Titan
@@ -72,13 +73,12 @@ function Drone:_request_build_pos()
 end
 
 function Drone:_build()
-	-- TODO
-	-- Note this totally works right after mining   TODO anytime
+	-- TODO build from down to up, then up down, then down up, ... (simply depends on pos relative to it...)
 	local pos = vector.copy(self._target_pos)
 	pos.y = pos.y - 1
-	self._driver:go_to(pos, {'y', 'x', 'z'}, {x=false, y=false, z=false})
+	self._driver:go_to(pos, {'x', 'z', 'y'}, {x=false, y=false, z=false})
 	
-	for i=1,16 do
+	for i=1,self._item_slots do
 		if turtle.getItemCount(i) > 0 then
 			turtle.select(i)
 			break
@@ -88,24 +88,38 @@ function Drone:_build()
 end
 
 function Drone:_mine()
+	-- goto top mining pos
 	self._target_pos.y = self._mining_height_max + 1
-	self._driver:go_to(self._target_pos, {'y', 'x', 'z'}, {x=false, y=false, z=false})
+	self._driver:go_to(self._target_pos, {'x', 'z', 'y'}, {x=false, y=false, z=false})
 	
+	-- mine down
 	self._target_pos.y = self._mining_height_min
 	self._driver:go_to(self._target_pos, {'y'}, {y=true})
+	
+	-- return to top
+	self._target_pos.y = self._mining_height_max + 1
+	self._driver:go_to(self._target_pos, {'y'}, {x=false, y=false, z=false})
 end
 
 -- Dumps all useless materials
 -- REQUIRE: hanging above lava
 function Drone:_dump_all()
 	self._engines[Direction.DOWN]:drop_all()
-	turtle.select(1)
+end
+
+function Drone:_get_material_count()
+	local count = 0
+	for i=1,self._item_slots do
+		count = count + turtle.getItemCount(i)
+	end
+	return count
 end
 
 function Drone:run()
 	while true do
 		if self._state == DroneState.IDLE then
 			if turtle.getItemCount(13) > 0 then
+				-- TODO must drop crap first (i.e. a DROPPING_CRAP state, which goes to lava pit and sees which slots are useless by placing below itself and then trying to dig it again, if either fails then drop slot)
 				self._state = DroneState.BUILDING
 			else
 				self:_request_mining_pos()
@@ -116,11 +130,14 @@ function Drone:run()
 			self:_mine()
 			self._state = DroneState.IDLE
 		elseif self._state == DroneState.BUILDING then
-			-- TODO if empty then state = idle
-			-- request next build location, move to it and build, from down to up, then up down, then down up, ... (simply depends on pos relative to it...)
-			log('build')
-			self:_request_build_pos()
-			self:_build()
+			if self:_get_material_count() < 16 then
+				self._state = DroneState.IDLE
+				-- TODO might want to drop the rest in lava, just to free our slots
+			else
+				log('build')
+				self:_request_build_pos()
+				self:_build()
+			end
 		else
 			assert(false)
 		end
