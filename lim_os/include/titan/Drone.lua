@@ -10,7 +10,8 @@ catch(function()
 DroneState = Object:new()
 DroneState.IDLE = 1
 DroneState.MINING = 2
-DroneState.BUILDING = 3
+DroneState.REQUESTING_BUILD = 3
+DroneState.BUILDING = 4
 
 Drone = Object:new()
 Drone._STATE_FILE = "/drone.state"
@@ -120,23 +121,25 @@ function Drone:run()
 		if self._state == DroneState.IDLE then
 			if turtle.getItemCount(13) > 0 then
 				-- TODO must drop crap first (i.e. a DROPPING_CRAP state, which goes to lava pit and sees which slots are useless by placing below itself and then trying to dig it again, if either fails then drop slot)
-				self._state = DroneState.BUILDING
+				self._state = DroneState.REQUEST_BUILD_ORDER
+				log('build')
 			else
 				self:_request_mining_pos()
 				self._state = DroneState.MINING
+				log('mine')
 			end
 		elseif self._state == DroneState.MINING then
-			log('mine')
 			self:_mine()
 			self._state = DroneState.IDLE
+		elseif self._state == DroneState.REQUEST_BUILD_ORDER then
+			self:_request_build_pos()
 		elseif self._state == DroneState.BUILDING then
+			self:_build()
 			if self:_get_material_count() < 16 then
 				self._state = DroneState.IDLE
 				-- TODO might want to drop the rest in lava, just to free our slots
 			else
-				log('build')
-				self:_request_build_pos()
-				self:_build()
+				self._state = DroneState.REQUEST_BUILD_ORDER
 			end
 		else
 			assert(false)
