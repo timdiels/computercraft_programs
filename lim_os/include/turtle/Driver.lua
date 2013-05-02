@@ -196,8 +196,9 @@ function Driver:_move(direction)
 	-- * a gravel could fall on top
 	while true do
 		if self._engines[direction]:detect() then
-			if not try(self._dig, self, direction) then
-				Exception("Path blocked")
+			while not try(self._dig, self, direction) do
+				log("Path blocked, waiting a bit until retrying")
+				os.sleep(1)
 			end
 		end
 		
