@@ -230,7 +230,9 @@ function Driver:_load_orientation()
 	for i=1,4 do
 		if try(self._move, self, Direction.FORWARD) then
 			p2 = gps_.persistent_locate()
-			turtle.back() --TODO persistent move backwards
+			while not try(turtle.back) do
+				os.sleep(1)
+			end
 			break
 		end
 		self:turn_right()
