@@ -30,7 +30,7 @@ end
 -- exactly like pcall, but doesn't display thrown error
 function try(...)
 	local f = table.remove(arg, 1)
-	return xpcall(function() f(unpack(arg)) end, noop)
+	return xpcall(function() f(unpack(arg)) end, function(e) return e end)
 end
 
 -- catches exceptions, prints them properly, then crashes the application
@@ -47,7 +47,6 @@ end
 exceptions = {}
 function exceptions.deserialize(str)
 	local prefix, e = string.match(str, "([^:]+:[^:]+: )(.+)")
-	print(e)
 	e = textutils.unserialize(e)
 	return prefix, e
 end
