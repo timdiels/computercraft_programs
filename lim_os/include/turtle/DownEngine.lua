@@ -18,4 +18,8 @@ function DownEngine:drop()
 	turtle.dropDown()
 end
 
+function DownEngine:place()
+	turtle.placeDown()
+end
+
 end)

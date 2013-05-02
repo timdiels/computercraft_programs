@@ -7,6 +7,8 @@
 
 catch(function()
 
+local CHUNK_SIZE = 16
+
 DroneState = Object:new()
 DroneState.IDLE = 1
 DroneState.MINING = 2
@@ -76,16 +78,41 @@ end
 function Drone:_build()
 	-- TODO build from down to up, then up down, then down up, ... (simply depends on pos relative to it...)
 	local pos = vector.copy(self._target_pos)
-	pos.y = pos.y - 1
+	
+	local start_y = pos.y
+	local stop_y = pos.y+16
+	local cur_y = self._driver:get_pos().y
+	local move_engine = self._engines[Direction.UP]
+	local place_engine = self._engines[Direction.DOWN]
+	if  math.abs(cur_y - start_y) > math.abs(cur_y - stop_y) then
+		-- move from top to bottom
+		start_y, stop_y = stop_y, start_y
+		move_engine, place_engine = place_engine, move_engine
+	--else move from bottom to top
+	end
+	
+	pos.y = start_y
+	
+	local move_to_different_chunk = math.abs(cur_pos - start_y) > CHUNK_SIZE
+	if move_to_different_chunk then
+		-- Avoid colliding with already built chunks
+		pos.x = math.floor(pos.x % CHUNK_SIZE) * CHUNK_SIZE - 1
+		pos.z = math.floor(pos.z % CHUNK_SIZE) * CHUNK_SIZE - 1
+		self._driver:go_to(pos, {'x', 'z', 'y'}, {x=false, y=false, z=false})
+	end
+	
 	self._driver:go_to(pos, {'x', 'z', 'y'}, {x=false, y=false, z=false})
 	
-	for i=1,self._item_slots do
-		if turtle.getItemCount(i) > 0 then
-			turtle.select(i)
-			break
+	for j=1,16 do	
+		for i=1,self._item_slots do
+			if turtle.getItemCount(i) > 0 then
+				turtle.select(i)
+				break
+			end
 		end
+		move_engine.move()
+		place_engine.place()
 	end
-	turtle.placeUp()
 end
 
 function Drone:_mine()
