@@ -19,11 +19,14 @@ function gps_.persistent_locate()
 	while true do
 		local status, retval = pcall(gps_.locate)
 		if status then
+			if not first_print then
+				print("GPS signal restored")
+			end
 			return retval
 		end
 		
 		if first_print then
-			print_exception(retval)
+			print("No GPS signal")
 			first_print = false
 		end
 		
