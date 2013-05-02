@@ -18,7 +18,7 @@ function ForwardEngine:drop()
 	turtle.drop()
 end
 
-function DownEngine:place()
+function ForwardEngine:place()
 	turtle.place()
 end
 

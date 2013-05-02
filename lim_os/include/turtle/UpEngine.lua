@@ -18,7 +18,7 @@ function UpEngine:drop()
 	turtle.dropUp()
 end
 
-function DownEngine:place()
+function UpEngine:place()
 	turtle.placeUp()
 end
 
