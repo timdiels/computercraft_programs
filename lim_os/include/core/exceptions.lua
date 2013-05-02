@@ -10,17 +10,7 @@ function error(table_, level)
 end
 
 function print_exception(error_string)
-	local prefix, e = exceptions.deserialize(error_string)
-	local message = prefix
-	if type(e) == "table" then
-		message = message.. e.message..' ('..e.type..')'
-	else
-		message = error_string
-	end
-	print(message)
-	log(message)
-	
-	return e
+	return log_exception(error_string, true)
 end
 
 -- print and abort
@@ -32,7 +22,7 @@ end
 -- exactly like pcall, but doesn't display thrown error
 function try(...)
 	local f = table.remove(arg, 1)
-	return xpcall(function() f(unpack(arg)) end, function(e) return e end)
+	return xpcall(function() f(unpack(arg)) end, log_exception)  -- note: xpcall annoyingly does a tostring on whatever the error handler returns
 end
 
 -- catches exceptions, prints them properly, then crashes the application
@@ -48,7 +38,18 @@ end
 
 exceptions = {}
 function exceptions.deserialize(str)
+	require_(str ~= nil)
 	local prefix, e = string.match(str, "([^:]+:[^:]+: )(.+)")
 	e = textutils.unserialize(e)
+	if type(e) ~= 'table' then
+		e = {type='', message=e}
+	end
 	return prefix, e
+end
+
+-- TODO move to other file
+local unserialize_ = textutils.unserialize
+function textutils.unserialize(str)
+	require_(str ~= nil)
+	return unserialize_(str)
 end

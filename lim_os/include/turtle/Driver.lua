@@ -8,8 +8,6 @@
 -- - Will happily move outside GPS range if you tell it to
 -- - Can handle gps interruptions due to storms just fine
 
--- TODO no longer handles going out of gps range well. Instead you might have to set it manually (because we no longer call gps all the time)
-
 -- Note: you can have only one Driver instance (because of state saving)
 
 catch(function()
@@ -139,7 +137,6 @@ function Driver:_move_one_tile()
 			success, e = try(self._move_one, self, axis, forward)
 			if not success then
 				_, e = exceptions.deserialize(e)
-				debug.print(e)
 				if e.type == 'PathBlocked' then
 					-- attempt to unblock, most only works well with collisions between turtles
 					log("Path blocked, making an evasive manouver")
@@ -159,7 +156,7 @@ function Driver:_move_one_tile()
 						axis = 'y'
 					end
 					
-					if try(self._move_one, self, 'y', forward) then
+					if try(self._move_one, self, axis, forward) then
 						os.sleep(1.5)
 					end
 				else
@@ -173,6 +170,9 @@ function Driver:_move_one_tile()
 end
 
 function Driver:_move_one(axis, forward)
+	require_(axis ~= nil)
+	require_(forward ~= nil)
+	
 	local new_pos = vector.copy(self._pos)
 	local direction
 	
@@ -216,7 +216,7 @@ end
 
 -- move a tile in direction and be extremely persistent about it
 function Driver:_move(direction)
-	assert(direction ~= nil)
+	require_(direction ~= nil)
 	
 	if turtle.getFuelLevel() == 0 then
 		Exception("Out of fuel")
