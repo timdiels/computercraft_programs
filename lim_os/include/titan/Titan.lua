@@ -8,6 +8,8 @@ catch(function()
 Titan = Object:new()
 Titan._STATE_FILE = "/titan.state"
 
+Titan._DROP_HEIGHT = 80 - 16
+
 function Titan:new()
 	local obj = Object.new(self)
 	obj:_load()
@@ -17,6 +19,7 @@ end
 function Titan:_load()
 	self._mining_system = MiningSystem:new()
 	self._build_system = BuildSystem:new()
+	self._home_pos = gps_.persistent_locate()
 end
 
 function Titan:_send(destination, contents)
@@ -32,7 +35,9 @@ function Titan:run()
 		local sender, msg, distance = rednet.receive()
 		msg = textutils.unserialize(msg)
 		if msg.user == 'limyreth' then
-			if msg.contents.type == 'mine_request' then
+			if msg.contents.type == 'drop_request' then
+				self:_send(sender, self._home_pos)
+			elseif msg.contents.type == 'mine_request' then
 				self:_send(sender, self._mining_system:get_next())
 			elseif msg.contents.type == 'build_request' then
 				self:_send(sender, self._build_system:get_next())  --TODO if builders exhaust materials slower than miners, than we'll occasionally have to have them dump their materials in the lava pit

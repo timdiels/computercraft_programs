@@ -73,6 +73,10 @@ function Drone:_query(contents)
 	end
 end
 
+function Drone:_request_drop_pos()
+	self._target_pos = vector.from_table(self:_query({type='drop_request'}))
+end
+
 function Drone:_request_mining_pos()
 	self._target_pos = vector.from_table(self:_query({type='mine_request'}))
 end
@@ -103,14 +107,9 @@ function Drone:_build()
 	local dp = cur_pos:sub(pos)
 	local destination_is_different_chunk = math.abs(dp.x) > CHUNK_SIZE or math.abs(dp.y) > CHUNK_SIZE or math.abs(dp.z) > CHUNK_SIZE
 	if destination_is_different_chunk then
-		-- Some preparations to prevent colliding with already built chunks when moving to dest chunk
-		
-		-- Move to nearest empty chunk, then move right below/above target chunk's y-pos
-		local p = vector.copy(cur_pos)
-		p.x = math.floor(p.x / CHUNK_SIZE) * CHUNK_SIZE - 1
-		p.z = math.floor(p.z / CHUNK_SIZE) * CHUNK_SIZE - 1
+		local p = vector.copy(pos)
 		p.y = pos.y - step
-		self._driver:go_to(p, {'x', 'z', 'y'}, {x=false, y=false, z=false})
+		self:_cross_chunk_move(p)
 	end
 	
 	self._driver:go_to(pos, {'x', 'z', 'y'}, {x=false, y=false, z=false})
@@ -133,6 +132,19 @@ function Drone:_build()
 	end
 end
 
+-- move to destination without colliding with already built chunks
+function Drone:_cross_chunk_move(destination)
+	-- Move to nearest empty chunk, then move right below/above target chunk's y-pos
+	local p = vector.copy(self._driver:get_pos())
+	p.x = math.floor(p.x / CHUNK_SIZE) * CHUNK_SIZE - 1
+	p.z = math.floor(p.z / CHUNK_SIZE) * CHUNK_SIZE - 1
+	p.y = destination.y
+	self._driver:go_to(p, {'x', 'z', 'y'}, {x=false, y=false, z=false})
+	
+	-- Move to actual destination
+	self._driver:go_to(destination, {'x', 'z', 'y'}, {x=false, y=false, z=false})
+end
+
 function Drone:_mine()
 	-- goto top mining pos
 	self._target_pos.y = self._mining_height_max + 1
@@ -148,19 +160,25 @@ function Drone:_mine()
 end
 
 function Drone:_drop_junk()
-	-- TODO first move above lava
+	-- move to drop point
+	self:_cross_chunk_move(self._target_pos)
+	
+	-- drop
 	local engine = self._engines[Direction.DOWN]
 	for i=1,16 do
 		turtle.select(i)
 		if not try(engine.place, engine) or not try(engine.dig, engine) then
 			engine:drop()
-			os.sleep(2)  -- need to wait for the dropped stuff to fall; because we can't place where blocks are falling
+			os.sleep(1)  -- need to wait for the dropped stuff to fall; because we can't place where blocks are falling
 		end
 	end
 end
 
 function Drone:_drop_all()
-	-- TODO first move above lava
+	-- move to drop point
+	self:_cross_chunk_move(self._target_pos)
+	
+	-- drop
 	local engine = self._engines[Direction.DOWN]
 	for i=1,16 do
 		turtle.select(i)
@@ -189,6 +207,7 @@ function Drone:run()
 			self:_mine()
 			self._state = DroneState.IDLE
 		elseif self._state == DroneState.DROP_JUNK then
+			self:_request_drop_pos()
 			self:_drop_junk()
 			self._state = DroneState.REQUEST_BUILD_ORDER
 		elseif self._state == DroneState.REQUEST_BUILD_ORDER then
@@ -202,6 +221,7 @@ function Drone:run()
 				self._state = DroneState.REQUEST_BUILD_ORDER
 			end
 		elseif self._state == DroneState.DROP_ALL then
+			self:_request_drop_pos()
 			self:_drop_all()
 			self._state = DroneState.IDLE
 		else

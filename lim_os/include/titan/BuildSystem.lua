@@ -12,7 +12,7 @@ local CHUNK_SIZE = 16
 BuildSystem = Object:new()
 BuildSystem._STATE_FILE = "/build_system.state"
 BuildSystem._MAX_HEIGHT = 13 -- chunks have to be built within these height bounds (in chunk coords)
-BuildSystem._MIN_HEIGHT = 7
+BuildSystem._MIN_HEIGHT = 5
 
 
 -- home_pos and last_pos are in chunk coords
