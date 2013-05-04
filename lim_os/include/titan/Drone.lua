@@ -145,7 +145,6 @@ function Drone:_cross_chunk_move(destination)
 	local p = vector.copy(self._driver:get_pos())
 	p.x = math.floor(p.x / CHUNK_SIZE) * CHUNK_SIZE - 1
 	p.z = math.floor(p.z / CHUNK_SIZE) * CHUNK_SIZE - 1
-	p.y = destination.y
 	self._driver:go_to(p, {'x', 'z', 'y'}, {x=false, y=false, z=false})
 	
 	-- Move to actual destination
