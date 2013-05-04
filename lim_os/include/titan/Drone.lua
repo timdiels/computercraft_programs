@@ -20,7 +20,7 @@ DroneState.DROP_ALL = 6
 Drone = Object:new()
 Drone._STATE_FILE = "/drone.state"
 Drone._mining_height_min = 5  -- bedrock goes up to height 4, and our AI doesn't handle bedrock
-Drone._mining_height_max = 160
+Drone._mining_height_max = 130
 Drone._engines = turtle.engines
 Drone._item_slots = 16
 -- self._target_pos: x, z coord of place to mine/build. y-coord of mining is ignored, y-coord of build pos points to lowest spot to build at
@@ -162,7 +162,7 @@ function Drone:_mine()
 	self._driver:go_to(self._target_pos, {'y'}, {y=true})
 	
 	-- return to top
-	self._target_pos.y = self._mining_height_max + 1
+	self._target_pos.y = self._mining_height_max + 31  -- +30 to allow collision resolution to happen some place where no mining happens (as turtles can mine each other...)
 	self._driver:go_to(self._target_pos, {'y'}, {x=false, y=false, z=false})
 end
 
