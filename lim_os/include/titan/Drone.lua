@@ -162,7 +162,7 @@ function Drone:_mine()
 	self._driver:go_to(self._target_pos, {'y'}, {y=true})
 	
 	-- return to top
-	self._target_pos.y = self._mining_height_max + 31  -- +30 to allow collision resolution to happen some place where no mining happens (as turtles can mine each other...)
+	self._target_pos.y = self._mining_height_max + 15  -- +15 to allow collision resolution to happen some place where no mining happens (as turtles can mine each other...)
 	self._driver:go_to(self._target_pos, {'y'}, {x=false, y=false, z=false})
 end
 
