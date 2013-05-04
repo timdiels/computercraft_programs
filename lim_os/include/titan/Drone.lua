@@ -61,16 +61,23 @@ function Drone:_save()
 end
 
 function Drone:_query(contents)
+	local query_msg =  textutils.serialize({user='limyreth', contents=contents})
+	local sender, msg, distance
+	
 	rednet.open('right')
-	rednet.send(self._titan_id, textutils.serialize({user='limyreth', contents=contents}))
-	while true do
-		local sender, msg, distance = rednet.receive()
-		msg = textutils.unserialize(msg)
-		if sender == self._titan_id then
-			rednet.close('right')
-			return msg.contents
+	rednet.send(self._titan_id, query_msg)
+	
+	repeat
+		sender, msg, distance = rednet.receive(5)
+		if sender == nil then
+			-- time out, send request again
+			rednet.send(self._titan_id, query_msg)
 		end
-	end
+	until sender == self._titan_id
+		
+	rednet.close('right')
+	msg = textutils.unserialize(msg)
+	return msg.contents
 end
 
 function Drone:_request_drop_pos()
