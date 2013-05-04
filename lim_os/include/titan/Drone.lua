@@ -86,7 +86,8 @@ function Drone:_build()
 	
 	local start_y = pos.y
 	local stop_y = pos.y+15
-	local cur_y = self._driver:get_pos().y
+	local cur_pos = self._driver:get_pos()
+	local cur_y = cur_pos.y
 	local step = 1
 	
 	if  math.abs(cur_y - start_y) > math.abs(cur_y - stop_y) then
@@ -99,14 +100,17 @@ function Drone:_build()
 	
 	pos.y = start_y
 	
-	local move_to_different_chunk = math.abs(cur_y - start_y) > CHUNK_SIZE
-	if move_to_different_chunk then
-		-- Avoid colliding with already built chunks
-		pos.x = math.floor(pos.x / CHUNK_SIZE) * CHUNK_SIZE - 1
-		pos.z = math.floor(pos.z / CHUNK_SIZE) * CHUNK_SIZE - 1
-		print('detour')
-		debug.print(pos)
-		self._driver:go_to(pos, {'x', 'z', 'y'}, {x=false, y=false, z=false})
+	local dp = cur_pos:sub(pos)
+	local destination_is_different_chunk = math.abs(dp.x) > CHUNK_SIZE or math.abs(dp.y) > CHUNK_SIZE or math.abs(dp.z) > CHUNK_SIZE
+	if destination_is_different_chunk then
+		-- Some preparations to prevent colliding with already built chunks when moving to dest chunk
+		
+		-- Move to nearest empty chunk, then move right below/above target chunk's y-pos
+		local p = vector.copy(cur_pos)
+		p.x = math.floor(p.x / CHUNK_SIZE) * CHUNK_SIZE - 1
+		p.z = math.floor(p.z / CHUNK_SIZE) * CHUNK_SIZE - 1
+		p.y = pos.y - step
+		self._driver:go_to(p, {'x', 'z', 'y'}, {x=false, y=false, z=false})
 	end
 	
 	self._driver:go_to(pos, {'x', 'z', 'y'}, {x=false, y=false, z=false})
