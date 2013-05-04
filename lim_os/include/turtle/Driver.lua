@@ -265,20 +265,18 @@ function Driver:_load_orientation()
 	
 	local p1 = self:_get_pos()
 	local p2 = nil  -- = pos after moving forward 
-	for i=1,4 do
-		if try(self._move, self, Direction.FORWARD) then
-			p2 = gps_.persistent_locate()
-			while not try(turtle.back) do
-				os.sleep(1)
+	repeat
+		for i=1,4 do
+			if try(self._move, self, Direction.FORWARD) then
+				p2 = gps_.persistent_locate()
+				while not try(turtle.back) do
+					os.sleep(1)
+				end
+				break
 			end
-			break
-		end
-		self:turn_right()
-	end
-	
-	if not p2 then
-		Exception("Disoriented")  -- we are surrounded by unminable blocks or out of fuel
-	end
+			self:turn_right()
+		end	
+	until p2 ~= nil
 	
 	local dp = p2 - p1
 	assert(dp.y == 0)
