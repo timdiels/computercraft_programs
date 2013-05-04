@@ -14,6 +14,8 @@ DroneState.IDLE = 1
 DroneState.MINING = 2
 DroneState.REQUESTING_BUILD = 3
 DroneState.BUILDING = 4
+DroneState.DROP_JUNK = 5
+DroneState.DROP_ALL = 6
 
 Drone = Object:new()
 Drone._STATE_FILE = "/drone.state"
@@ -141,10 +143,25 @@ function Drone:_mine()
 	self._driver:go_to(self._target_pos, {'y'}, {x=false, y=false, z=false})
 end
 
--- Dumps all useless materials
--- REQUIRE: hanging above lava
-function Drone:_dump_all()
-	self._engines[Direction.DOWN]:drop_all()
+function Drone:_drop_junk()
+	-- TODO first move above lava
+	local engine = self._engines[Direction.DOWN]
+	for i=1,16 do
+		turtle.select(i)
+		if not try(engine.place, engine) or not try(engine.dig, engine) then
+			engine:drop()
+			os.sleep(2)  -- need to wait for the dropped stuff to fall; because we can't place where blocks are falling
+		end
+	end
+end
+
+function Drone:_drop_all()
+	-- TODO first move above lava
+	local engine = self._engines[Direction.DOWN]
+	for i=1,16 do
+		turtle.select(i)
+		engine:drop()
+	end
 end
 
 function Drone:_get_material_count()
@@ -159,28 +176,30 @@ function Drone:run()
 	while true do
 		if self._state == DroneState.IDLE then
 			if turtle.getItemCount(13) > 0 then
-				-- TODO must drop crap first (i.e. a DROPPING_CRAP state, which goes to lava pit and sees which slots are useless by placing below itself and then trying to dig it again, if either fails then drop slot)
-				self._state = DroneState.REQUEST_BUILD_ORDER
-				log('build')
+				self._state = DroneState.DROP_JUNK
 			else
 				self:_request_mining_pos()
 				self._state = DroneState.MINING
-				log('mine')
 			end
 		elseif self._state == DroneState.MINING then
 			self:_mine()
 			self._state = DroneState.IDLE
+		elseif self._state == DroneState.DROP_JUNK then
+			self:_drop_junk()
+			self._state = DroneState.REQUEST_BUILD_ORDER
 		elseif self._state == DroneState.REQUEST_BUILD_ORDER then
 			self:_request_build_pos()
 			self._state = DroneState.BUILDING
 		elseif self._state == DroneState.BUILDING then
 			self:_build()
 			if self:_get_material_count() < 16 then
-				self._state = DroneState.IDLE
-				-- TODO might want to drop the rest in lava, just to free our slots
+				self._state = DroneState.DROP_ALL
 			else
 				self._state = DroneState.REQUEST_BUILD_ORDER
 			end
+		elseif self._state == DroneState.DROP_ALL then
+			self:_drop_all()
+			self._state = DroneState.IDLE
 		else
 			assert(false)
 		end

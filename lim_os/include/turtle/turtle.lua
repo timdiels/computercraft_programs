@@ -67,3 +67,43 @@ function turtle.is_inventory_empty()
 	end
 	return true
 end
+
+local _select = turtle.select
+local _selected_slot = 1
+function turtle.select(i)
+	_select(i)
+	_selected_slot = i
+end
+
+local _getItemCount = turtle.getItemCount
+function turtle.getItemCount(i)
+	i = i or _selected_slot
+	return _getItemCount(i)
+end
+
+local _drop = turtle.drop
+function turtle.drop(amount)
+	if turtle.getItemCount() > 0 then
+		if not _drop() then
+			Exception("Failed to drop")
+		end
+	end
+end
+
+local _dropUp = turtle.dropUp
+function turtle.dropUp(amount)
+	if turtle.getItemCount() > 0 then
+		if not _dropUp() then
+			Exception("Failed to drop")
+		end
+	end
+end
+
+local _dropDown = turtle.dropDown
+function turtle.dropDown(amount)
+	if turtle.getItemCount() > 0 then
+		if not _dropDown() then
+			Exception("Failed to drop")
+		end
+	end
+end
