@@ -1,9 +1,6 @@
 catch(function()
 
-include("titan/MiningSystem.lua")
-include("titan/BuildSystem.lua")
-include("titan/GarbageSystem.lua")
-include("titan/Titan.lua")
+include("titan/titan_inc.lua")
 
 local titan = Titan:new()
 titan:run()

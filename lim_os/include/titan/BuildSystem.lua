@@ -7,8 +7,6 @@
 
 catch(function()
 
-local CHUNK_SIZE = 16
-
 BuildSystem = Object:new()
 BuildSystem._STATE_FILE = "/build_system.state"
 BuildSystem._MAX_HEIGHT = 13 -- chunks have to be built within these height bounds (in chunk coords)
@@ -20,8 +18,9 @@ BuildSystem._MIN_HEIGHT = 5
 -- _z_offset: z offset withing current chunk that is being built
 -- build_queue: queue of chunks to build
 
-function BuildSystem:new()
+function BuildSystem:new(mining_system)
 	local obj = Object.new(self)
+	obj._mining_system = mining_system
 	obj:_load()
 	return obj
 end
@@ -65,6 +64,10 @@ function BuildSystem:get_next()
 	local finished_chunk = self._x_offset == CHUNK_SIZE-1 and self._z_offset == CHUNK_SIZE-1
 	if finished_chunk then
 		self:_next_chunk()
+	end
+	
+	if not self._mining_system:is_chunk_mined(self._current_chunk) then
+		error({type='NoRoomToBuildException', message='No place left to build'})
 	end
 	
 	-- pos within a chunk

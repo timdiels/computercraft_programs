@@ -2,7 +2,7 @@ args = { ... }
 
 catch(function()
 
-include("titan/Drone.lua")
+include("titan/titan_inc.lua")
 
 local drone = Drone:new(tonumber(args[1]))
 drone:run()

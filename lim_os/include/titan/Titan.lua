@@ -16,7 +16,7 @@ end
 
 function Titan:_load()
 	self._mining_system = MiningSystem:new()
-	self._build_system = BuildSystem:new()
+	self._build_system = BuildSystem:new(self._mining_system)
 	self._garbage_system = GarbageSystem:new()
 end
 
@@ -33,10 +33,11 @@ function Titan:run()
 		local sender, msg, distance = rednet.receive()
 		msg = textutils.unserialize(msg)
 		if msg.user == 'limyreth' then
+			self._mining_system:finished_mining(sender)
 			if msg.contents.type == 'drop_request' then
 				self:_send(sender, self._garbage_system:get_next())
 			elseif msg.contents.type == 'mine_request' then
-				self:_send(sender, self._mining_system:get_next())
+				self:_send(sender, self._mining_system:get_next(sender))
 			elseif msg.contents.type == 'build_request' then
 				self:_send(sender, self._build_system:get_next())  --TODO if builders exhaust materials slower than miners, than we'll occasionally have to have them dump their materials in the lava pit
 			else

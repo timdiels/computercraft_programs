@@ -7,8 +7,6 @@
 
 catch(function()
 
-local CHUNK_SIZE = 16
-
 DroneState = Object:new()
 DroneState.IDLE = 1
 DroneState.MINING = 2
@@ -36,10 +34,6 @@ end
 -- Load from file
 function Drone:_load()
 	self._driver = Driver:new()
-	--local p = self._driver:get_pos()
-	--log(p.x)
-	--log(p.y)
-	--log(p.z)
 	
 	-- load persistent things
 	local state = io.from_file(self._STATE_FILE)
