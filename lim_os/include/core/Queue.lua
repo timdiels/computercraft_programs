@@ -1,5 +1,5 @@
 Queue = Object:new()
-__TYPES['Queue'] = Vector
+__TYPES['Queue'] = Queue
 
 -- queue of vectors
 function Queue:new()
