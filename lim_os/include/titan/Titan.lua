@@ -26,7 +26,7 @@ function Titan:_load()
 	
 	self._mining_system = MiningSystem:new(self._home_pos)
 	self._build_system = BuildSystem:new(self._home_chunk, self._mining_system)
-	self._garbage_system = GarbageSystem:new(self._home_pos)
+	self._garbage_system = GarbageSystem:new(self._home_pos, self._mining_system)
 end
 
 function Titan:_send(destination, contents)
