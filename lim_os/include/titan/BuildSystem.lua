@@ -18,8 +18,13 @@ BuildSystem._MIN_HEIGHT = 5
 -- _z_offset: z offset withing current chunk that is being built
 -- build_queue: queue of chunks to build
 
-function BuildSystem:new(mining_system)
+function BuildSystem:new(home_chunk, mining_system)
 	local obj = Object.new(self)
+	
+	self._home_chunk = vector.copy(home_chunk)
+	self._home_chunk.y = (BuildSystem._MAX_HEIGHT + BuildSystem._MIN_HEIGHT) / 2
+	assert(self._home_chunk.y == math.floor(self._home_chunk.y))
+	
 	obj._mining_system = mining_system
 	obj:_load()
 	return obj
@@ -32,12 +37,6 @@ function BuildSystem:_load()
 	if state then
 		table.merge(self, state)
 	else
-		self._home_chunk = gps_.persistent_locate()
-		self._home_chunk.x = math.floor(self._home_chunk.x / CHUNK_SIZE)
-		self._home_chunk.y = (BuildSystem._MAX_HEIGHT + BuildSystem._MIN_HEIGHT) / 2
-		self._home_chunk.z = math.floor(self._home_chunk.z / CHUNK_SIZE)
-		assert(self._home_chunk.y == math.floor(self._home_chunk.y))
-		
 		self._radius = 0
 		self._build_queue = Queue:new()
 		self._build_queue:push_back(vector.copy(self._home_chunk))
@@ -50,7 +49,6 @@ end
 -- Save state to file
 function BuildSystem:_save()
 	io.to_file(self._STATE_FILE, {
-		_home_chunk = self._home_chunk,
 		_current_chunk = self._current_chunk,
 		_radius = self._radius,
 		_x_offset = self._x_offset,

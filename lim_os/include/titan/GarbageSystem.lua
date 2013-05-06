@@ -11,8 +11,9 @@ GarbageSystem._DROP_HEIGHT = 80 - 16
 GarbageSystem._RADIUS = 7  -- musn't be a multiple of 3
 GarbageSystem._LOCATION_COUNT = GarbageSystem._RADIUS * GarbageSystem._RADIUS  -- number of garbage locations to provide
 
-function GarbageSystem:new()
+function GarbageSystem:new(home_pos)
 	local obj = Object.new(self)
+	self._home_pos = vector.copy(home_pos)
 	obj:_load()
 	return obj
 end
@@ -22,7 +23,6 @@ function GarbageSystem:_load()
 	if state then
 		table.merge(self, state)
 	else
-		self._home_pos = gps_.persistent_locate()
 		self._last_location = 0		
 		self:_save()
 	end

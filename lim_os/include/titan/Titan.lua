@@ -21,10 +21,12 @@ function Titan:_load()
 		math.floor(self._home_pos.y / CHUNK_SIZE),
 		math.floor(self._home_pos.z / CHUNK_SIZE)
 	)
+	self._home_pos.x = math.floor((self._home_chunk.x + 0.5) * CHUNK_SIZE)
+	self._home_pos.z = math.floor((self._home_chunk.z + 0.5) * CHUNK_SIZE)
 	
-	self._mining_system = MiningSystem:new()
-	self._build_system = BuildSystem:new(self._mining_system)
-	self._garbage_system = GarbageSystem:new()
+	self._mining_system = MiningSystem:new(self._home_pos)
+	self._build_system = BuildSystem:new(self._home_chunk, self._mining_system)
+	self._garbage_system = GarbageSystem:new(self._home_pos)
 end
 
 function Titan:_send(destination, contents)
@@ -36,7 +38,10 @@ end
 
 -- Returns position nearest to given pos where there is guaranteed free space (i.e. mined out and has no chunks built there)
 function Titan:_get_nearest_free_pos(pos)
-	local chunk = pos
+	log('')
+	log(pos.x)
+	log(pos.z)
+	local chunk = vector.copy(pos)
 	chunk.x = math.floor(chunk.x / CHUNK_SIZE)
 	chunk.z = math.floor(chunk.z / CHUNK_SIZE)
 	
@@ -59,17 +64,22 @@ function Titan:_get_nearest_free_pos(pos)
 		end
 	end
 	
+	log('return')
 	if not self._mining_system:is_chunk_mined(chunk) then
+		log('same')
 		return pos
 	end
 	
 	pos.x = chunk.x * CHUNK_SIZE
 	pos.z = chunk.z * CHUNK_SIZE
+	log(pos.x)
+	log(pos.z)
 	
 	return pos
 end
 
 function Titan:run()
+	self:_get_nearest_free_pos(self._home_pos)
 	rednet.open('top')
 	while true do
 		local sender, msg, distance = rednet.receive()
@@ -83,12 +93,12 @@ function Titan:run()
 			elseif msg.contents.type == 'mine_request' then
 				self:_send(sender, self._mining_system:get_next(sender))
 			elseif msg.contents.type == 'build_request' then
-				local succeeded, build_pos = try(self._build_system:get_next())
+				local succeeded, build_pos = try(self._build_system.get_next, self._build_system)
 				if succeeded then
 					self:_send(sender, {type='build', build_pos=build_pos})
 				else
 					local err_str = build_pos
-					local err = exceptions.deserialize(err_str)
+					local _, err = exceptions.deserialize(err_str)
 					if err.type == 'NoRoomException' then
 						self:_send(sender, {type='drop'})
 					else

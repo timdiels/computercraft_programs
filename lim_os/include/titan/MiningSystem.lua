@@ -7,8 +7,9 @@ catch(function()
 MiningSystem = Object:new()
 MiningSystem._STATE_FILE = "/mining_system.state"
 
-function MiningSystem:new()
+function MiningSystem:new(home_pos)
 	local obj = Object.new(self)
+	self._home_pos = vector.copy(home_pos)
 	obj:_load()
 	return obj
 end
@@ -20,7 +21,6 @@ function MiningSystem:_load()
 	if state then
 		table.merge(self, state)
 	else
-		self._home_pos = gps_.persistent_locate()
 		self._last_pos = nil  -- last issued position
 		self._issued_positions = {}  -- currently issued positions (i.e. they're mining there)
 		
@@ -31,7 +31,6 @@ end
 -- Save state to file
 function MiningSystem:_save()
 	io.to_file(self._STATE_FILE, {
-		_home_pos = self._home_pos,
 		_last_pos = self._last_pos,
 		_issued_positions = self._issued_positions,
 	})

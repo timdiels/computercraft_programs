@@ -213,7 +213,7 @@ function Drone:run()
 				self._state = DroneState.REQUEST_BUILD_ORDER
 			end
 		elseif self._state == DroneState.DROP_ALL then
-			self:_request_drop_pos()
+			self._target_pos = self:_query({type='drop_request'})
 			self:_drop_all()
 			self._state = DroneState.IDLE
 		else
