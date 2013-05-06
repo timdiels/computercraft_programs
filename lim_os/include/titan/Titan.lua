@@ -79,7 +79,6 @@ function Titan:_get_nearest_free_pos(pos)
 end
 
 function Titan:run()
-	self:_get_nearest_free_pos(self._home_pos)
 	rednet.open('top')
 	while true do
 		local sender, msg, distance = rednet.receive()

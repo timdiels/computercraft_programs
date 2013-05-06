@@ -54,14 +54,14 @@ function MiningSystem:is_chunk_mined(chunk)
 end
 
 -- whether given pos has already been mined out
-function MiningSystem:is_pos_mined(pos)
+function MiningSystem:is_pos_mined(pos)	
 	return self:_get_distance(pos) <= self:_get_last_mined_out_distance()
 end
 
 -- returns distance of last mined out pos
 function MiningSystem:_get_last_mined_out_distance()
 	-- find min distance
-	local d = self:_get_distance(last_pos)
+	local d = self:_get_distance(self._last_pos)
 	for _, pos in pairs(self._issued_positions) do
 		local d2 = self:_get_distance(pos)
 		if d > d2 then
