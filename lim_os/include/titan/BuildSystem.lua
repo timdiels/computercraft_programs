@@ -67,7 +67,7 @@ function BuildSystem:get_next()
 	end
 	
 	if not self._mining_system:is_chunk_mined(self._current_chunk) then
-		error({type='NoRoomToBuildException', message='No place left to build'})
+		error({type='NoRoomException', message='No place left to build'})
 	end
 	
 	-- pos within a chunk

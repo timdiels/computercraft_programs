@@ -73,18 +73,6 @@ function Drone:_query(contents)
 	return msg.contents
 end
 
-function Drone:_request_drop_pos()
-	self._target_pos = self:_query({type='drop_request'})
-end
-
-function Drone:_request_mining_pos()
-	self._target_pos = self:_query({type='mine_request'})
-end
-
-function Drone:_request_build_pos()
-	self._target_pos = self:_query({type='build_request'})
-end
-
 function Drone:_build()
 	local pos = vector.copy(self._target_pos)
 	
@@ -197,19 +185,26 @@ function Drone:run()
 			if turtle.getItemCount(13) > 0 then
 				self._state = DroneState.DROP_JUNK
 			else
-				self:_request_mining_pos()
+				self._target_pos = self:_query({type='mine_request'})
 				self._state = DroneState.MINING
 			end
 		elseif self._state == DroneState.MINING then
 			self:_mine()
 			self._state = DroneState.IDLE
 		elseif self._state == DroneState.DROP_JUNK then
-			self:_request_drop_pos()
+			self._target_pos = self:_query({type='drop_request'})
 			self:_drop_junk()
 			self._state = DroneState.REQUEST_BUILD_ORDER
 		elseif self._state == DroneState.REQUEST_BUILD_ORDER then
-			self:_request_build_pos()
-			self._state = DroneState.BUILDING
+			local reply = self:_query({type='build_request'})
+			if reply.type == 'build' then
+				self._target_pos = reply.build_pos
+				self._state = DroneState.BUILDING
+			elseif reply.type == 'drop' then
+				self._state = DroneState.DROP_ALL
+			else
+				assert(false)
+			end
 		elseif self._state == DroneState.BUILDING then
 			self:_build()
 			if self:_get_material_count() < 16 then

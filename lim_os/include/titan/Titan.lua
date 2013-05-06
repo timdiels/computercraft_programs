@@ -83,7 +83,19 @@ function Titan:run()
 			elseif msg.contents.type == 'mine_request' then
 				self:_send(sender, self._mining_system:get_next(sender))
 			elseif msg.contents.type == 'build_request' then
-				self:_send(sender, self._build_system:get_next())  --TODO if builders exhaust materials slower than miners, than we'll occasionally have to have them dump their materials in the lava pit
+				local succeeded, build_pos = try(self._build_system:get_next())
+				if succeeded then
+					self:_send(sender, {type='build', build_pos=build_pos})
+				else
+					local err_str = build_pos
+					local err = exceptions.deserialize(err_str)
+					if err.type == 'NoRoomException' then
+						self:_send(sender, {type='drop'})
+					else
+						error(err_str)
+					end
+				end
+				
 			else
 				assert(false)
 			end
