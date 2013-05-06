@@ -22,7 +22,7 @@ end
 -- exactly like pcall, but doesn't display thrown error
 function try(...)
 	local f = table.remove(arg, 1)
-	return xpcall(function() f(unpack(arg)) end, log_exception)  -- note: xpcall annoyingly does a tostring on whatever the error handler returns
+	return xpcall(function() return f(unpack(arg)) end, log_exception)  -- note: xpcall annoyingly does a tostring on whatever the error handler returns
 end
 
 -- catches exceptions, prints them properly, then crashes the application
