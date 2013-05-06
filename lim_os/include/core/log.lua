@@ -1,6 +1,7 @@
 
 local f = fs.open("error.log", 'a')
 function log(message, enable_print)
+	message = debug.tostring(message)
 	enable_print = enable_print or false
 	f.writeLine('Day '..os.day()..' '..textutils.formatTime( os.time(), true )..': '..message)
 	f.flush()
