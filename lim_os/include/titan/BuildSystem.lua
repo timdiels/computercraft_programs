@@ -64,7 +64,8 @@ function BuildSystem:get_next()
 		self:_next_chunk()
 	end
 	
-	if not self._mining_system:is_chunk_mined(self._current_chunk) then
+	local is_inside_terrain = self._current_chunk.y * CHUNK_SIZE <= TERRAIN_HEIGHT_MAX
+	if is_inside_terrain and not self._mining_system:is_chunk_mined(self._current_chunk) then
 		error({type='NoRoomException', message='No place left to build'})
 	end
 	
