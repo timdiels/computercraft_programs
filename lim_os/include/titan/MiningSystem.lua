@@ -51,12 +51,12 @@ function MiningSystem:is_chunk_mined(chunk)
 	corner4.x = corner4.x + CHUNK_SIZE-1
 	corner4.z = corner4.z + CHUNK_SIZE-1
 	
-	return is_pos_mined(corner1) and is_pos_mined(corner2) and is_pos_mined(corner3) and is_pos_mined(corner4)
+	return self:is_pos_mined(corner1) and self:is_pos_mined(corner2) and self:is_pos_mined(corner3) and self:is_pos_mined(corner4)
 end
 
 -- whether given pos has already been mined out
 function MiningSystem:is_pos_mined(pos)
-	return self:_get_distance(pos) <= self:_get_distance(self:_get_last_mined_out_pos())
+	return self:_get_distance(pos) <= self:_get_last_mined_out_distance()
 end
 
 -- returns distance of last mined out pos
@@ -153,7 +153,6 @@ function MiningSystem:get_next(requester_id)
 		end
 	end
 	
-	log(self:_get_distance(self._last_pos))
 	self._issued_positions[requester_id] = vector.copy(self._last_pos)
 	self:_save()
 	return vector.copy(self._last_pos)
