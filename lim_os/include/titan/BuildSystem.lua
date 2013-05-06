@@ -32,9 +32,6 @@ function BuildSystem:_load()
 	local state = io.from_file(self._STATE_FILE)
 	if state then
 		table.merge(self, state)
-		self._home_chunk = vector.from_table(self._home_chunk)
-		self._current_chunk = vector.from_table(self._current_chunk)
-		self._build_queue = Queue:from_table(self._build_queue)
 	else
 		self._home_chunk = gps_.persistent_locate()
 		self._home_chunk.x = math.floor(self._home_chunk.x / CHUNK_SIZE)

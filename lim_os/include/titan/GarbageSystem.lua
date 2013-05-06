@@ -21,7 +21,6 @@ function GarbageSystem:_load()
 	local state = io.from_file(self._STATE_FILE)
 	if state then
 		table.merge(self, state)
-		self._home_pos = vector.from_table(self._home_pos)
 	else
 		self._home_pos = gps_.persistent_locate()
 		self._last_location = 0		

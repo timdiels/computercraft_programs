@@ -28,14 +28,6 @@ function Titan:_send(destination, contents)
 end
 
 function Titan:run()
-	log('new')
-	for i=1,52 do
-		local pos = self._garbage_system:get_next()
-		log(pos.x .. ' ' .. pos.z)
-	end
-	log('end')
-	ijij()
-
 	rednet.open('top')
 	while true do
 		local sender, msg, distance = rednet.receive()

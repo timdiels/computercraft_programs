@@ -32,7 +32,6 @@ function Driver:_load(persistent)
 		local state = io.from_file(self._STATE_FILE)
 		if state then
 			table.merge(self, state)
-			self._destination = vector.from_table(self._destination)
 		end
 		
 		-- resume movement if we were moving

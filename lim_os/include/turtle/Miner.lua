@@ -31,13 +31,11 @@ function Miner:_load()
 	local state = io.from_file(self._STATE_FILE)
 	if state then
 		table.merge(self, state)
-		self._home_pos = vector.from_table(self._home_pos)
-		self._mining_pos = vector.from_table(self._mining_pos)
 	else
 		self._home_pos = gps_.persistent_locate()
 		
 		-- where we currently/will mine
-		self._mining_pos = vector.from_table(self._home_pos)
+		self._mining_pos = vector.copy(self._home_pos)
 		self._mining_pos.y = 7
 		
 		self:_save()
@@ -79,7 +77,7 @@ function Miner:_set_next_mining_pos()
 		self._mining_pos.x = self._mining_pos.x + 1
 		if d == self._max_radius then
 			local height = self._mining_pos.y
-			self._mining_pos = vector.from_table(self._home_pos)
+			self._mining_pos = vector.copy(self._home_pos)
 			self._mining_pos.y = height + 3
 		end
 		-- Note: d += 1

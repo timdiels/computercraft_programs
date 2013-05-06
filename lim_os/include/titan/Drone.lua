@@ -45,7 +45,6 @@ function Drone:_load()
 	local state = io.from_file(self._STATE_FILE)
 	if state then
 		table.merge(self, state)
-		self._target_pos = vector.from_table(self._target_pos)
 	else
 		self._state = DroneState.IDLE
 		self:_save()
@@ -81,15 +80,15 @@ function Drone:_query(contents)
 end
 
 function Drone:_request_drop_pos()
-	self._target_pos = vector.from_table(self:_query({type='drop_request'}))
+	self._target_pos = self:_query({type='drop_request'})
 end
 
 function Drone:_request_mining_pos()
-	self._target_pos = vector.from_table(self:_query({type='mine_request'}))
+	self._target_pos = self:_query({type='mine_request'})
 end
 
 function Drone:_request_build_pos()
-	self._target_pos = vector.from_table(self:_query({type='build_request'}))
+	self._target_pos = self:_query({type='build_request'})
 end
 
 function Drone:_build()
