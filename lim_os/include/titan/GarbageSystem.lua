@@ -38,10 +38,11 @@ end
 
 -- returns next available pos and considers it assigned to whoever requested it
 function GarbageSystem:get_next()
+	local pos
 	repeat
 		self._last_location = (self._last_location + 3) % self._LOCATION_COUNT
 		
-		local pos = vector.copy(self._home_pos)
+		pos = vector.copy(self._home_pos)
 		pos.x = pos.x + math.floor((self._last_location - self._LOCATION_COUNT / 2) / self._RADIUS)
 		pos.y = GarbageSystem._DROP_HEIGHT
 		pos.z = pos.z + (self._last_location % self._RADIUS) - math.floor(self._RADIUS/2)

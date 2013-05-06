@@ -79,7 +79,7 @@ function MiningSystem:_get_distance(pos)
 	end
 	
 	-- Note: make a drawing to understand the math below
-	local dp = pos:sub(self._home_pos)
+	local dp = pos - self._home_pos
 	local d = math.max(math.abs(dp.x), math.abs(dp.z))
 	local distance = 0
 	
