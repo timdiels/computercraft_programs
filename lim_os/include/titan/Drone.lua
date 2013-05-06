@@ -144,9 +144,17 @@ function Drone:_mine()
 	self._driver:go_to(self._target_pos, {'y'}, {x=false, y=false, z=false})
 end
 
+-- move to drop of point
+function Drone:_go_to_drop_pos()
+	local pos = vector.copy(self._target_pos)
+	pos.y = pos.y + 15  -- margin for collision resolving at a place that isn't filled with bots that dig
+	self:_cross_chunk_move(pos)
+	
+	self._driver:go_to(self._target_pos, {'x', 'z', 'y'}, {x=false, y=false, z=false})
+end
+
 function Drone:_drop_junk()
-	-- move to drop point
-	self._driver:go_to(self._target_pos, {'y', 'x', 'z'}, {x=false, y=false, z=false})
+	self:_go_to_drop_pos()
 	
 	-- drop
 	local engine = self._engines[Direction.DOWN]
@@ -160,8 +168,7 @@ function Drone:_drop_junk()
 end
 
 function Drone:_drop_all()
-	-- move to drop point
-	self:_cross_chunk_move(self._target_pos)
+	self:_go_to_drop_pos()
 	
 	-- drop
 	local engine = self._engines[Direction.DOWN]
