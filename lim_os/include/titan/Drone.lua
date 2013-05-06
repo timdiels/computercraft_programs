@@ -10,7 +10,7 @@ catch(function()
 DroneState = Object:new()
 DroneState.IDLE = 1
 DroneState.MINING = 2
-DroneState.REQUESTING_BUILD = 3
+DroneState.REQUEST_BUILD_ORDER = 3
 DroneState.BUILDING = 4
 DroneState.DROP_JUNK = 5
 DroneState.DROP_ALL = 6
@@ -67,7 +67,7 @@ function Drone:_query(contents)
 			rednet.send(self._titan_id, query_msg)
 		end
 	until sender == self._titan_id
-		
+	
 	rednet.close('right')
 	msg = textutils.unserialize(msg)
 	return msg.contents

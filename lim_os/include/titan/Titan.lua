@@ -38,9 +38,6 @@ end
 
 -- Returns position nearest to given pos where there is guaranteed free space (i.e. mined out and has no chunks built there)
 function Titan:_get_nearest_free_pos(pos)
-	log('')
-	log(pos.x)
-	log(pos.z)
 	local chunk = vector.copy(pos)
 	chunk.x = math.floor(chunk.x / CHUNK_SIZE)
 	chunk.z = math.floor(chunk.z / CHUNK_SIZE)
@@ -64,16 +61,12 @@ function Titan:_get_nearest_free_pos(pos)
 		end
 	end
 	
-	log('return')
 	if not self._mining_system:is_chunk_mined(chunk) then
-		log('same')
 		return pos
 	end
 	
 	pos.x = chunk.x * CHUNK_SIZE
 	pos.z = chunk.z * CHUNK_SIZE
-	log(pos.x)
-	log(pos.z)
 	
 	return pos
 end
@@ -94,6 +87,7 @@ function Titan:run()
 			elseif msg.contents.type == 'build_request' then
 				local succeeded, build_pos = try(self._build_system.get_next, self._build_system)
 				if succeeded then
+					assert(build_pos)
 					self:_send(sender, {type='build', build_pos=build_pos})
 				else
 					local err_str = build_pos
