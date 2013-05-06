@@ -134,11 +134,9 @@ end
 
 -- move to destination without colliding with already built chunks
 function Drone:_cross_chunk_move(destination)
-	-- Move to nearest empty chunk, then move right below/above target chunk's y-pos
-	local p = vector.copy(self._driver:get_pos())
-	p.x = math.floor(p.x / CHUNK_SIZE) * CHUNK_SIZE - 1
-	p.z = math.floor(p.z / CHUNK_SIZE) * CHUNK_SIZE - 1
-	self._driver:go_to(p, {'x', 'z', 'y'}, {x=false, y=false, z=false})
+	-- Move to nearest empty chunk pos
+	local free_pos = self:_query({type='nearest_free_pos_request', drone_pos=self._driver:get_pos()})
+	self._driver:go_to(free_pos, {'x', 'z', 'y'}, {x=false, y=false, z=false})
 	
 	-- Move to actual destination
 	self._driver:go_to(destination, {'x', 'z', 'y'}, {x=false, y=false, z=false})
@@ -160,7 +158,7 @@ end
 
 function Drone:_drop_junk()
 	-- move to drop point
-	self:_cross_chunk_move(self._target_pos)
+	self._driver:go_to(self._target_pos, {'y', 'x', 'z'}, {x=false, y=false, z=false})
 	
 	-- drop
 	local engine = self._engines[Direction.DOWN]
