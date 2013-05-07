@@ -42,33 +42,40 @@ function Titan:_get_nearest_free_pos(pos)
 	chunk.x = math.floor(chunk.x / CHUNK_SIZE)
 	chunk.z = math.floor(chunk.z / CHUNK_SIZE)
 	
-	local dc = self._home_chunk - chunk
-	if chunk.x % 2 == self._home_chunk.x % 2 then
-		-- we're not in empty chunk x-wise
-		if dc.x > 0 then
-			chunk.x = chunk.x + 1
-		else
-			chunk.x = chunk.x - 1
+	local free_pos = vector.copy(pos)
+	if chunk.x == self._home_chunk.x and chunk.z == self._home_chunk.z then
+		-- seeing how the mining sys works, this spot is most likely to be mined out, outside the home chunk
+		free_pos.x = (self._home_chunk.x+1) * CHUNK_SIZE
+		free_pos.z = (self._home_chunk.z+1) * CHUNK_SIZE - 1
+	else	
+		local dc = self._home_chunk - chunk
+		if chunk.x % 2 == self._home_chunk.x % 2 then
+			-- we're not in empty chunk x-wise
+			if dc.x > 0 then
+				chunk.x = chunk.x + 1
+			else
+				chunk.x = chunk.x - 1
+			end
 		end
+		
+		if chunk.z % 2 == self._home_chunk.z % 2 then
+			-- we're not in empty chunk z-wise
+			if dc.z > 0 then
+				chunk.z = chunk.z + 1
+			else
+				chunk.z = chunk.z - 1
+			end
+		end
+		
+		free_pos.x = chunk.x * CHUNK_SIZE
+		free_pos.z = chunk.z * CHUNK_SIZE
 	end
 	
-	if chunk.z % 2 == self._home_chunk.z % 2 then
-		-- we're not in empty chunk z-wise
-		if dc.z > 0 then
-			chunk.z = chunk.z + 1
-		else
-			chunk.z = chunk.z - 1
-		end
-	end
-	
-	if not self._mining_system:is_chunk_mined(chunk) then
+	if self._mining_system:is_pos_mined(free_pos) then
+		return free_pos
+	else
 		return pos
 	end
-	
-	pos.x = chunk.x * CHUNK_SIZE
-	pos.z = chunk.z * CHUNK_SIZE
-	
-	return pos
 end
 
 function Titan:run()

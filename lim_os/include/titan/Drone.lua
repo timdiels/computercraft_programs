@@ -127,7 +127,7 @@ function Drone:_cross_chunk_move(destination)
 	self._driver:go_to(free_pos, {'x', 'z', 'y'}, {x=false, y=false, z=false})
 	
 	-- Move to actual destination
-	self._driver:go_to(destination, {'x', 'z', 'y'}, {x=false, y=false, z=false})
+	self._driver:go_to(destination, {'y', 'x', 'z'}, {x=false, y=false, z=false})
 end
 
 function Drone:_mine()
