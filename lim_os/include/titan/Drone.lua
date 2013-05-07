@@ -75,10 +75,22 @@ end
 
 function Drone:_build()
 	local pos = vector.copy(self._target_pos)
+	local cur_pos = self._driver:get_pos()
+	
+	if pos.x == cur_pos.x and pos.z == cur_pos.z then
+		-- we may have already partially built it, so start by breaking down what we had already built
+		local p = vector.copy(pos)
+		
+		-- mine to bottom
+		self._driver:go_to(p, {'x', 'z', 'y'}, {x=false, y=true, z=false})
+		
+		-- mine to top (and pray we don't hit any astray turtles while doing this)
+		p.y = p.y + 15
+		self._driver:go_to(p, {'x', 'z', 'y'}, {x=false, y=true, z=false})
+	end
 	
 	local start_y = pos.y
 	local stop_y = pos.y+15
-	local cur_pos = self._driver:get_pos()
 	local cur_y = cur_pos.y
 	local step = 1
 	
