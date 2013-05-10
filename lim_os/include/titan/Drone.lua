@@ -1,4 +1,4 @@
--- Worker drones of Titan
+-- Client side main class of Worker drones of Titan
 
 -- REQUIRES: is a mining turtle with unlimited fuel and a modem at right side
 -- ENSURE: At any point in time, handle server crashes well
@@ -7,50 +7,18 @@
 
 catch(function()
 
-DroneState = Object:new()
-DroneState.IDLE = 1
-DroneState.MINING = 2
-DroneState.REQUEST_BUILD_ORDER = 3
-DroneState.BUILDING = 4
-DroneState.DROP_JUNK = 5
-DroneState.DROP_ALL = 6
-
 Drone = Object:new()
-Drone._STATE_FILE = "/drone.state"
 Drone._mining_height_min = 5  -- bedrock goes up to height 4, and our AI doesn't handle bedrock
 Drone._mining_height_max = TERRAIN_HEIGHT_MAX
 Drone._engines = turtle.engines
-Drone._item_slots = 16
 -- self._target_pos: x, z coord of place to mine/build. y-coord of mining is ignored, y-coord of build pos points to lowest spot to build at
 
 -- titan_id: computer id of Titan
 function Drone:new(titan_id)
 	local obj = Object.new(self)
 	obj._titan_id = titan_id
-	obj:_load()
+	obj._driver = Driver:new()
 	return obj
-end
-
--- Load from file
-function Drone:_load()
-	self._driver = Driver:new()
-	
-	-- load persistent things
-	local state = io.from_file(self._STATE_FILE)
-	if state then
-		table.merge(self, state)
-	else
-		self._state = DroneState.IDLE
-		self:_save()
-	end
-end
-
--- Save state to file
-function Drone:_save()
-	io.to_file(self._STATE_FILE, {
-		_state = self._state,
-		_target_pos = self._target_pos,
-	})
 end
 
 function Drone:_query(contents)
@@ -73,6 +41,19 @@ function Drone:_query(contents)
 	return msg.contents
 end
 
+function Drone:_fetch_command(is_initial_command)
+	local stats = {}	
+	stats.finished = not is_initial_command  -- whether or not prev command has been finished
+	stats.can_mine = turtle.getItemCount(13) == 0
+	stats.can_build = self:_get_material_count() < 16
+	log(stats)
+	
+	local command = self:_query({type='command_request', drone_stats=stats})
+	log(command)
+	self._state = command.state
+	self._target_pos = command.target_pos
+end
+
 function Drone:_build()
 	local pos = vector.copy(self._target_pos)
 	local cur_pos = self._driver:get_pos()
@@ -89,7 +70,7 @@ function Drone:_build()
 		-- mine to bottom
 		self._driver:go_to(p, {'x', 'z', 'y'}, {x=false, y=true, z=false})
 		
-		-- mine to top (and pray we don't hit any astray turtles while doing this)
+		-- mine to top
 		p.y = p.y + 15
 		self._driver:go_to(p, {'x', 'z', 'y'}, {x=false, y=true, z=false})
 	end
@@ -114,7 +95,7 @@ function Drone:_build()
 		pos.y = pos.y + step
 		self._driver:go_to(pos, {'x', 'z', 'y'}, {x=false, y=false, z=false})
 		
-		for i=1,self._item_slots do
+		for i=1,16 do
 			if turtle.getItemCount(i) > 0 then
 				turtle.select(i)
 				break
@@ -151,17 +132,12 @@ function Drone:_mine()
 	self._driver:go_to(self._target_pos, {'y'}, {y=true})
 	
 	-- return to top
-	self._target_pos.y = self._mining_height_max + 10  -- +10 to allow collision resolution to happen some place where no mining happens (as turtles can mine each other...)
 	self._driver:go_to(self._target_pos, {'y'}, {x=false, y=false, z=false})
 end
 
 -- move to drop of point
 function Drone:_go_to_drop_pos()
-	local pos = vector.copy(self._target_pos)
-	pos.y = pos.y + 15  -- margin for collision resolving at a place that isn't filled with bots that dig
-	self:_cross_chunk_move(pos)
-	
-	self._driver:go_to(self._target_pos, {'x', 'z', 'y'}, {x=false, y=false, z=false})
+	self:_cross_chunk_move(self._target_pos)
 end
 
 function Drone:_drop_junk()
@@ -191,60 +167,34 @@ end
 
 function Drone:_get_material_count()
 	local count = 0
-	for i=1,self._item_slots do
+	for i=1,16 do
 		count = count + turtle.getItemCount(i)
 	end
 	return count
 end
 
 function Drone:run()
+	self:_fetch_command(true)
+	
 	while true do
-		if self._state == DroneState.IDLE then
-			log('idle', true)
-			if turtle.getItemCount(13) > 0 then
-				self._state = DroneState.DROP_JUNK
-			else
-				self._target_pos = self:_query({type='mine_request'})
-				self._state = DroneState.MINING
-			end
-		elseif self._state == DroneState.MINING then
+		if self._state == DroneState.MINING then
 			log('mining', true)
 			self:_mine()
-			self._state = DroneState.IDLE
 		elseif self._state == DroneState.DROP_JUNK then
 			log('drop junk', true)
-			self._target_pos = self:_query({type='drop_request'})
 			self:_drop_junk()
-			self._state = DroneState.REQUEST_BUILD_ORDER
-		elseif self._state == DroneState.REQUEST_BUILD_ORDER then
-			log('requesting build', true)
-			local reply = self:_query({type='build_request'})
-			if reply.type == 'build' then
-				self._target_pos = reply.build_pos
-				self._state = DroneState.BUILDING
-			elseif reply.type == 'drop' then
-				self._state = DroneState.DROP_ALL
-			else
-				assert(false)
-			end
 		elseif self._state == DroneState.BUILDING then
 			log('building', true)
 			self:_build()
-			if self:_get_material_count() < 16 then
-				self._state = DroneState.DROP_ALL
-			else
-				self._state = DroneState.REQUEST_BUILD_ORDER
-			end
 		elseif self._state == DroneState.DROP_ALL then
 			log('drop all', true)
-			self._target_pos = self:_query({type='drop_request'})
 			self:_drop_all()
-			self._state = DroneState.IDLE
 		else
+			log(self._state, true)
 			assert(false)
 		end
 		
-		self:_save()
+		self:_fetch_command(false)
 	end
 end
 

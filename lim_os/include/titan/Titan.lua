@@ -15,6 +15,7 @@ function Titan:new()
 end
 
 function Titan:_load()
+	-- load transient
 	self._home_pos = gps_.persistent_locate()
 	self._home_chunk = vector.new(
 		math.floor(self._home_pos.x / CHUNK_SIZE),
@@ -27,6 +28,24 @@ function Titan:_load()
 	self._mining_system = MiningSystem:new(self._home_pos)
 	self._build_system = BuildSystem:new(self._home_chunk, self._mining_system)
 	self._garbage_system = GarbageSystem:new(self._home_pos, self._mining_system)
+	
+	-- load persistent things
+	local state = io.from_file(self._STATE_FILE)
+	if state then
+		table.merge(self, state)
+	else
+		self._drones = {}
+		self:_save()
+	end
+end
+
+function Titan:_save()
+	io.to_file(self._STATE_FILE, {
+		_drones = self._drones,
+	})
+	self._build_system:save()
+	self._mining_system:save()
+	self._garbage_system:save()
 end
 
 function Titan:_send(destination, contents)
@@ -74,6 +93,8 @@ function Titan:_get_nearest_free_pos(pos)
 	if self._mining_system:is_pos_mined(free_pos) then
 		return free_pos
 	else
+		log('no nearest free pos')
+		log(free_pos)
 		return pos
 	end
 end
@@ -87,24 +108,51 @@ function Titan:run()
 			self._mining_system:finished_mining(sender)
 			if msg.contents.type == 'nearest_free_pos_request' then
 				self:_send(sender, self:_get_nearest_free_pos(msg.contents.drone_pos))
-			elseif msg.contents.type == 'drop_request' then
-				self:_send(sender, self._garbage_system:get_next())
-			elseif msg.contents.type == 'mine_request' then
-				self:_send(sender, self._mining_system:get_next(sender))
-			elseif msg.contents.type == 'build_request' then
-				local succeeded, build_pos = try(self._build_system.get_next, self._build_system)
-				if succeeded then
-					assert(build_pos)
-					self:_send(sender, {type='build', build_pos=build_pos})
-				else
-					local err_str = build_pos
-					local _, err = exceptions.deserialize(err_str)
-					if err.type == 'NoRoomException' then
-						self:_send(sender, {type='drop'})
-					else
-						error(err_str)
-					end
+			elseif msg.contents.type == 'command_request' then
+			
+				if self._drones[sender] == nil then
+					self._drones[sender] = {state=DroneState.INITIAL}
 				end
+				
+				local stats = msg.contents.drone_stats
+				local drone = self._drones[sender]
+				
+				-- switch drone state if it actually finished its last command
+				if drone.state == DroneState.INITIAL or stats.finished then
+					if drone.state == DroneState.INITIAL or drone.state == DroneState.MINING or drone.state == DroneState.DROP_ALL then
+						if stats.can_mine then
+							drone.state = DroneState.MINING
+							drone.target_pos = self._mining_system:get_next(sender)
+						else
+							drone.state = DroneState.DROP_JUNK
+							drone.target_pos = self._garbage_system:get_next()
+						end
+					elseif drone.state == DroneState.DROP_JUNK or drone.state == DroneState.BUILDING then
+						drone.state = DroneState.DROP_ALL
+						
+						if stats.can_build then
+							local succeeded, build_pos = try(self._build_system.get_next, self._build_system)
+							if succeeded then
+								assert(build_pos)
+								drone.state = DroneState.BUILDING
+								drone.target_pos = build_pos
+							else
+								local err_str = build_pos
+								local _, err = exceptions.deserialize(err_str)
+								if err.type ~= 'NoRoomException' then
+									error(err_str)
+								end
+							end
+						end
+					else
+						assert(false)
+					end
+					
+					self:_save()
+				end
+				
+				-- send command
+				self:_send(sender, drone)
 				
 			else
 				assert(false)

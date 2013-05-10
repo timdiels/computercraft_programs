@@ -1,6 +1,8 @@
 CHUNK_SIZE = 16
 TERRAIN_HEIGHT_MAX = 130  -- the max height at which a block of terrain (tree, dirt, ...) can occur
 
+include("titan/DroneState.lua")
+
 if turtle then
 	include("titan/Drone.lua")
 end

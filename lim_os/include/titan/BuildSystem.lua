@@ -41,13 +41,10 @@ function BuildSystem:_load()
 		self._build_queue = Queue:new()
 		self._build_queue:push_back(vector.copy(self._home_chunk))
 		self:_next_chunk()
-		
-		self:_save()
 	end
 end
 
--- Save state to file
-function BuildSystem:_save()
+function BuildSystem:save()
 	io.to_file(self._STATE_FILE, {
 		_current_chunk = self._current_chunk,
 		_radius = self._radius,
@@ -76,8 +73,6 @@ function BuildSystem:get_next()
 		self._z_offset = -1
 	end
 	self._z_offset = self._z_offset + 1
-	
-	self:_save()
 	
 	local pos = self._current_chunk * CHUNK_SIZE
 	pos.x = pos.x + self._x_offset

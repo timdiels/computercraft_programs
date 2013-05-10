@@ -23,13 +23,10 @@ function MiningSystem:_load()
 	else
 		self._last_pos = nil  -- last issued position
 		self._issued_positions = {}  -- currently issued positions (i.e. they're mining there)
-		
-		self:_save()
 	end
 end
 
--- Save state to file
-function MiningSystem:_save()
+function MiningSystem:save()
 	io.to_file(self._STATE_FILE, {
 		_last_pos = self._last_pos,
 		_issued_positions = self._issued_positions,
@@ -54,7 +51,7 @@ function MiningSystem:is_chunk_mined(chunk)
 end
 
 -- whether given pos has already been mined out
-function MiningSystem:is_pos_mined(pos)	
+function MiningSystem:is_pos_mined(pos)
 	return self:_get_distance(pos) <= self:_get_last_mined_out_distance()
 end
 
@@ -119,7 +116,6 @@ end
 -- notify that certain requester completed its last mining assignment
 function MiningSystem:finished_mining(requester_id)
 	self._issued_positions[requester_id] = nil
-	self:_save()
 end
 
 -- returns next available mining pos and considers it assigned to whoever requested it
@@ -153,7 +149,6 @@ function MiningSystem:get_next(requester_id)
 	end
 	
 	self._issued_positions[requester_id] = vector.copy(self._last_pos)
-	self:_save()
 	return vector.copy(self._last_pos)
 end
 

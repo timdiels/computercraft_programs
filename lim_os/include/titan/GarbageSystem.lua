@@ -24,13 +24,11 @@ function GarbageSystem:_load()
 	if state then
 		table.merge(self, state)
 	else
-		self._last_location = 0		
-		self:_save()
+		self._last_location = 0
 	end
 end
 
--- Save state to file
-function GarbageSystem:_save()
+function GarbageSystem:save()
 	io.to_file(self._STATE_FILE, {
 		_last_location = self._last_location,
 	})
@@ -47,7 +45,6 @@ function GarbageSystem:get_next()
 		pos.y = GarbageSystem._DROP_HEIGHT
 		pos.z = pos.z + (self._last_location % self._RADIUS) - math.floor(self._RADIUS/2)
 	until self._mining_system:is_pos_mined(pos)
-	self:_save()	
 	return pos
 end
 
