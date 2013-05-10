@@ -77,7 +77,12 @@ function Drone:_build()
 	local pos = vector.copy(self._target_pos)
 	local cur_pos = self._driver:get_pos()
 	
-	if pos.x == cur_pos.x and pos.z == cur_pos.z then
+	local start_y = pos.y
+	local stop_y = pos.y+15
+	local cur_y = cur_pos.y
+	local step = 1
+	
+	if pos.x == cur_pos.x and pos.z == cur_pos.z and cur_pos.y >= start_y-1 and cur_pos.y <= stop_y+1 then
 		-- we may have already partially built it, so start by breaking down what we had already built
 		local p = vector.copy(pos)
 		
@@ -89,11 +94,6 @@ function Drone:_build()
 		self._driver:go_to(p, {'x', 'z', 'y'}, {x=false, y=true, z=false})
 	end
 	
-	local start_y = pos.y
-	local stop_y = pos.y+15
-	local cur_y = cur_pos.y
-	local step = 1
-	
 	if  math.abs(cur_y - start_y) > math.abs(cur_y - stop_y) then
 		-- move from top to bottom
 		start_y, stop_y = stop_y, start_y
@@ -104,13 +104,9 @@ function Drone:_build()
 	
 	pos.y = start_y
 	
-	local dp = cur_pos:sub(pos)
-	local destination_is_different_chunk = math.abs(dp.x) > CHUNK_SIZE or math.abs(dp.y) > CHUNK_SIZE or math.abs(dp.z) > CHUNK_SIZE
-	if destination_is_different_chunk then
-		local p = vector.copy(pos)
-		p.y = pos.y - step
-		self:_cross_chunk_move(p)
-	end
+	local p = vector.copy(pos)
+	p.y = pos.y - step
+	self:_cross_chunk_move(p)
 	
 	self._driver:go_to(pos, {'x', 'z', 'y'}, {x=false, y=false, z=false})
 	
@@ -134,8 +130,11 @@ end
 
 -- move to destination without colliding with already built chunks
 function Drone:_cross_chunk_move(destination)
+	log('cross chunk move')
 	-- Move to nearest empty chunk pos
 	local free_pos = self:_query({type='nearest_free_pos_request', drone_pos=self._driver:get_pos()})
+	log(free_pos)
+	log(destination)
 	self._driver:go_to(free_pos, {'x', 'z', 'y'}, {x=false, y=false, z=false})
 	
 	-- Move to actual destination
@@ -201,6 +200,7 @@ end
 function Drone:run()
 	while true do
 		if self._state == DroneState.IDLE then
+			log('idle', true)
 			if turtle.getItemCount(13) > 0 then
 				self._state = DroneState.DROP_JUNK
 			else
@@ -208,13 +208,16 @@ function Drone:run()
 				self._state = DroneState.MINING
 			end
 		elseif self._state == DroneState.MINING then
+			log('mining', true)
 			self:_mine()
 			self._state = DroneState.IDLE
 		elseif self._state == DroneState.DROP_JUNK then
+			log('drop junk', true)
 			self._target_pos = self:_query({type='drop_request'})
 			self:_drop_junk()
 			self._state = DroneState.REQUEST_BUILD_ORDER
 		elseif self._state == DroneState.REQUEST_BUILD_ORDER then
+			log('requesting build', true)
 			local reply = self:_query({type='build_request'})
 			if reply.type == 'build' then
 				self._target_pos = reply.build_pos
@@ -225,6 +228,7 @@ function Drone:run()
 				assert(false)
 			end
 		elseif self._state == DroneState.BUILDING then
+			log('building', true)
 			self:_build()
 			if self:_get_material_count() < 16 then
 				self._state = DroneState.DROP_ALL
@@ -232,6 +236,7 @@ function Drone:run()
 				self._state = DroneState.REQUEST_BUILD_ORDER
 			end
 		elseif self._state == DroneState.DROP_ALL then
+			log('drop all', true)
 			self._target_pos = self:_query({type='drop_request'})
 			self:_drop_all()
 			self._state = DroneState.IDLE
