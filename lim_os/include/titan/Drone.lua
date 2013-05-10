@@ -132,6 +132,7 @@ function Drone:_mine()
 	self._driver:go_to(self._target_pos, {'y'}, {y=true})
 	
 	-- return to top
+	self._target_pos.y = self._mining_height_max + 1
 	self._driver:go_to(self._target_pos, {'y'}, {x=false, y=false, z=false})
 end
 
