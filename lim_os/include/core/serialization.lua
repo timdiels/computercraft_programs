@@ -19,6 +19,7 @@ end
 
 local unserialize_ = textutils.unserialize
 function textutils.unserialize(str)
+	require_(str ~= nil)
 	local t = unserialize_(str)
 	return textutils.objectify(t)
 end

@@ -46,10 +46,3 @@ function exceptions.deserialize(str)
 	end
 	return prefix, e
 end
-
--- TODO move to other file
-local unserialize_ = textutils.unserialize
-function textutils.unserialize(str)
-	require_(str ~= nil)
-	return unserialize_(str)
-end
