@@ -40,22 +40,28 @@ end
 
 local _dig = turtle.dig
 function turtle.dig()
-	if not _dig() then
-		Exception("Failed to dig")
+	if peripheral.getType('front') ~= 'turtle' then
+		if not _dig() then
+			Exception("Failed to dig")
+		end
 	end
 end
 
 local _digDown = turtle.digDown
 function turtle.digDown()
-	if not _digDown() then
-		Exception("Failed to dig down")
+	if peripheral.getType('bottom') ~= 'turtle' then
+		if not _digDown() then
+			Exception("Failed to dig down")
+		end
 	end
 end
 
 local _digUp = turtle.digUp
 function turtle.digUp()
-	if not _digUp() then
-		Exception("Failed to dig up")
+	if peripheral.getType('top') ~= 'turtle' then
+		if not _digUp() then
+			Exception("Failed to dig up")
+		end
 	end
 end
 
