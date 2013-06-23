@@ -19,6 +19,9 @@ function UpEngine:drop()
 end
 
 function UpEngine:place()
+	while self:detect() do
+		os.sleep(1)
+	end
 	turtle.placeUp()
 end
 

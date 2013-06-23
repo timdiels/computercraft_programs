@@ -19,6 +19,9 @@ function ForwardEngine:drop()
 end
 
 function ForwardEngine:place()
+	while self:detect() do
+		os.sleep(1)
+	end
 	turtle.place()
 end
 
