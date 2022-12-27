@@ -1,5 +1,3 @@
--- Kill fucking chickens
-
 function isRawChicken()
   return turtle.compareTo(16)
 end
@@ -7,13 +5,13 @@ end
 while true do
   common.sleepInterval(25)
   
-  print('Commencing slaughter')
+  print('Slaughtering chickens')
   while turtle.attackUp() do
     turtle.suckUp()
     os.sleep(0.5)
   end
   
-  common.printEvent('Finished slaughter')
+  common.printEvent('Finished')
   turtle.dropDown()
   
   print('Baking')
